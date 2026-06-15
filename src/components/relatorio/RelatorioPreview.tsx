@@ -21,14 +21,12 @@ interface Props {
   logoRef?: React.RefObject<HTMLImageElement>
   brandColors?: BrandColors
   tipoRelatorio?: string
-  cidade?: string
-  estado?: string
 }
 
-const TIPO_LABEL: Record<string, string> = {
+const TIPO_SUBTITULO: Record<string, string> = {
   evolucao: 'Relatório de Evolução',
-  avaliacao: 'Relatório de Avaliação Funcional',
-  alta: 'Relatório de Alta Terapêutica',
+  avaliacao: 'Relatório de Avaliação',
+  alta: 'Relatório de Alta',
   encaminhamento: 'Relatório de Encaminhamento',
 }
 
@@ -41,185 +39,114 @@ export function RelatorioPreview({
   logoUrl, logoRef,
   brandColors = defaultBrandColors,
   tipoRelatorio,
-  cidade, estado,
 }: Props) {
   const hoje = formatarData(new Date())
   const inicio = periodoInicio ? formatarData(periodoInicio) : hoje
   const fim = periodoFim ? formatarData(periodoFim) : hoje
-  const localStr = [cidade, estado].filter(Boolean).join(' / ')
-  const tipoLabel = tipoRelatorio ? (TIPO_LABEL[tipoRelatorio] || tipoRelatorio) : 'Relatório Clínico'
 
-  const col = brandColors.primary
+  const meta = [
+    ['Paciente', nomePaciente],
+    ['Período', `${inicio} a ${fim}`],
+    ['Diagnóstico (CID-10)', cidPrincipal],
+    ['Financiamento', financiamento === 'convenio' ? `Convênio${tuss ? ` — TUSS: ${tuss}` : ''}` : 'Particular'],
+    ['Data de emissão', hoje],
+  ]
 
   return (
     <div
       id={id}
-      style={{ fontFamily: 'Montserrat, sans-serif', background: '#ffffff', width: '794px' }}
+      style={{ fontFamily: "'Montserrat', sans-serif" }}
+      className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
     >
-      {/* ── CABEÇALHO ── */}
-      <div style={{ background: col, padding: '28px 40px 24px' }}>
-
-        {/* Linha 1: foto + nome + tipo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-
-          {/* Foto circular */}
-          <div style={{ flexShrink: 0 }}>
+      {/* Cabeçalho */}
+      <div
+        className="px-10 pt-8 pb-6 border-b border-gray-100"
+        style={{ background: `linear-gradient(135deg, ${brandColors.primary}0d, ${brandColors.light})` }}
+      >
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div className="flex-shrink-0 min-w-[56px]">
             {logoUrl ? (
               <img
                 ref={logoRef}
                 src={logoUrl}
-                alt="Foto"
+                alt="Logo"
                 crossOrigin="anonymous"
-                style={{ width: '68px', height: '68px', borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.4)', display: 'block' }}
+                className="h-14 w-auto max-w-[160px] object-contain block"
               />
             ) : (
-              <div style={{
-                width: '68px', height: '68px', borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                border: '3px solid rgba(255,255,255,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '26px', fontWeight: 700, color: 'rgba(255,255,255,0.9)',
-                fontFamily: 'Fraunces, serif',
-              }}>
-                {nomeTerapeuta ? nomeTerapeuta.charAt(0).toUpperCase() : 'T'}
-              </div>
+              <div
+                className="h-14 w-14 rounded-xl flex items-center justify-center font-bold text-lg"
+                style={{ background: brandColors.light, color: brandColors.primary, fontFamily: 'Fraunces, serif' }}
+              >T</div>
             )}
           </div>
-
-          {/* Nome e credenciais */}
-          <div style={{ flex: 1 }}>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '9px', fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', margin: '0 0 4px' }}>
-              Terapeuta Ocupacional
-            </p>
-            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, fontFamily: 'Fraunces, serif', margin: '0 0 4px', lineHeight: 1.1 }}>
-              {nomeTerapeuta || 'Nome do Terapeuta'}
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', margin: 0 }}>
-              {crfto ? `CRF/TO: ${crfto}` : ''}
-              {crfto && localStr ? '  ·  ' : ''}
-              {localStr}
-            </p>
-          </div>
-
-          {/* Badge tipo */}
-          <div style={{
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: '8px',
-            padding: '8px 14px',
-            textAlign: 'right',
-            flexShrink: 0,
-          }}>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 3px' }}>
-              Tipo de documento
-            </p>
-            <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 700, margin: 0 }}>
-              {tipoLabel}
-            </p>
+          <div className="text-right">
+            <p className="font-bold text-sm" style={{ color: brandColors.primary }}>{nomeTerapeuta || 'Nome do Terapeuta'}</p>
+            <p className="text-gray-500 text-xs mt-0.5">Terapeuta Ocupacional</p>
+            {crfto && <p className="text-gray-500 text-xs">CRF/TO: {crfto}</p>}
           </div>
         </div>
 
-        {/* Divisória */}
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.2)', marginBottom: '16px' }} />
+        <div className="h-0.5 mb-5 rounded" style={{ background: brandColors.primary }} />
 
-        {/* Título */}
-        <p style={{
-          color: '#ffffff', fontSize: '12px', fontWeight: 700,
-          letterSpacing: '2px', textTransform: 'uppercase',
-          textAlign: 'center', fontFamily: 'Fraunces, serif',
-          margin: '0 0 16px',
-        }}>
+        <h1
+          className="text-center text-base font-bold uppercase tracking-wide mb-1"
+          style={{ color: brandColors.primary, fontFamily: 'Fraunces, serif' }}
+        >
           Relatório Clínico de Terapia Ocupacional
-        </p>
+        </h1>
+        {tipoRelatorio && (
+          <p className="text-center text-xs font-medium text-gray-500 mb-5">
+            {TIPO_SUBTITULO[tipoRelatorio] || ''}
+          </p>
+        )}
 
-        {/* Metadados — tabela simples sem grid */}
-        <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px 16px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <tbody>
-              <tr>
-                <td style={{ padding: '4px 16px 4px 0', verticalAlign: 'top', width: '33%' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>Paciente</p>
-                  <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>{nomePaciente}</p>
-                </td>
-                <td style={{ padding: '4px 16px 4px 0', verticalAlign: 'top', width: '33%' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>Período</p>
-                  <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>{inicio} a {fim}</p>
-                </td>
-                <td style={{ padding: '4px 0', verticalAlign: 'top', width: '33%' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>Data de emissão</p>
-                  <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>{hoje}</p>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ padding: '8px 16px 0 0', verticalAlign: 'top' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>CID-10 Principal</p>
-                  <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>{cidPrincipal}</p>
-                </td>
-                <td style={{ padding: '8px 16px 0 0', verticalAlign: 'top' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>Financiamento</p>
-                  <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>
-                    {financiamento === 'convenio' ? 'Convênio / Plano de Saúde' : 'Particular'}
-                  </p>
-                </td>
-                {tuss && financiamento === 'convenio' ? (
-                  <td style={{ padding: '8px 0 0', verticalAlign: 'top' }}>
-                    <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '8px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 2px' }}>Código TUSS</p>
-                    <p style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600, margin: 0 }}>{tuss}</p>
-                  </td>
-                ) : <td />}
-              </tr>
-            </tbody>
-          </table>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-xs mt-4">
+          {meta.map(([label, value]) => (
+            <div key={label}>
+              <span className="text-gray-400 font-medium block">{label}</span>
+              <span className="font-semibold text-gray-800">{value}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── AVISO COFFITO ── */}
-      <div style={{ background: '#f8f9fa', borderBottom: '1px solid #e9ecef', padding: '8px 40px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: col, flexShrink: 0 }} />
-        <p style={{ fontSize: '9px', color: '#6c757d', margin: 0, lineHeight: 1.5 }}>
-          Documento emitido em conformidade com as normas do <strong>COFFITO</strong> — Conselho Federal de Fisioterapia e Terapia Ocupacional.
-          {financiamento === 'convenio' && ' Válido para apresentação a planos de saúde e perícias médicas.'}
-        </p>
-      </div>
-
-      {/* ── CORPO ── */}
-      <div style={{ padding: '32px 40px' }}>
+      {/* Corpo */}
+      <div className="px-10 py-8">
         {!editando ? (
           <ReactMarkdown
             components={{
               h1: ({ children }) => (
-                <h2 style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: col, borderBottom: `2px solid ${brandColors.light}`, paddingBottom: '5px', marginTop: '24px', marginBottom: '10px' }}>
+                <h2 className="text-xs font-bold uppercase tracking-widest mt-7 mb-2 pb-1.5"
+                    style={{ color: brandColors.primary, borderBottom: `1.5px solid ${brandColors.light}` }}>
                   {children}
                 </h2>
               ),
               h2: ({ children }) => (
-                <h2 style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: col, borderBottom: `2px solid ${brandColors.light}`, paddingBottom: '5px', marginTop: '24px', marginBottom: '10px' }}>
+                <h2 className="text-xs font-bold uppercase tracking-widest mt-7 mb-2 pb-1.5"
+                    style={{ color: brandColors.primary, borderBottom: `1.5px solid ${brandColors.light}` }}>
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 style={{ fontSize: '11px', fontWeight: 600, color: '#495057', marginTop: '12px', marginBottom: '4px' }}>
-                  {children}
-                </h3>
+                <h3 className="text-xs font-semibold text-gray-600 mt-4 mb-1 uppercase tracking-wide">{children}</h3>
               ),
               p: ({ children }) => (
-                <p style={{ fontSize: '12px', color: '#343a40', lineHeight: 1.8, marginBottom: '10px', margin: '0 0 10px' }}>
-                  {children}
-                </p>
+                <p className="text-sm text-gray-700 leading-relaxed mb-3">{children}</p>
               ),
               strong: ({ children }) => (
-                <strong style={{ fontWeight: 600, color: '#212529' }}>{children}</strong>
+                <strong className="font-semibold text-gray-800">{children}</strong>
               ),
-              ul: ({ children }) => <ul style={{ margin: '0 0 12px', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
+              ul: ({ children }) => <ul className="space-y-1 mb-3">{children}</ul>,
               li: ({ children }) => (
-                <li style={{ fontSize: '12px', color: '#343a40', display: 'flex', gap: '8px', lineHeight: 1.7, marginBottom: '4px' }}>
-                  <span style={{ color: col, flexShrink: 0 }}>▸</span>
+                <li className="text-sm text-gray-700 flex gap-2 leading-relaxed">
+                  <span className="mt-1 flex-shrink-0" style={{ color: brandColors.primary }}>▸</span>
                   <span>{children}</span>
                 </li>
               ),
-              ol: ({ children }) => <ol style={{ paddingLeft: '18px', margin: '0 0 12px' }}>{children}</ol>,
-              hr: () => <div style={{ height: '1px', background: '#e9ecef', margin: '16px 0' }} />,
-              code: ({ children }) => <span style={{ color: '#495057' }}>{children}</span>,
+              ol: ({ children }) => <ol className="list-decimal ml-5 space-y-1 mb-3">{children}</ol>,
+              hr: () => <div className="my-4 h-px bg-gray-100" />,
+              code: ({ children }) => <span className="text-gray-700">{children}</span>,
             }}
           >
             {conteudo}
@@ -240,47 +167,24 @@ export function RelatorioPreview({
         )}
       </div>
 
-      {/* ── RODAPÉ / ASSINATURA ── */}
-      <div style={{ padding: '0 40px 40px' }}>
-        <div style={{ borderTop: `2px solid ${col}`, paddingTop: '24px' }}>
-
-          {/* Aviso de validação */}
-          <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', borderRadius: '8px', padding: '10px 14px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <div style={{ width: '3px', flexShrink: 0, background: col, borderRadius: '2px', alignSelf: 'stretch' }} />
-            <p style={{ fontSize: '10px', color: '#495057', margin: 0, lineHeight: 1.6 }}>
-              <strong style={{ color: '#212529' }}>Documento sujeito à validação profissional.</strong>{' '}
-              Este relatório deve ser conferido e assinado pelo Terapeuta Ocupacional responsável antes de qualquer utilização clínica, legal ou previdenciária.
-            </p>
+      {/* Assinatura */}
+      <div className="px-10 pb-10">
+        <div className="pt-8 mt-2" style={{ borderTop: `2px solid ${brandColors.primary}` }}>
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="w-56 border-b border-gray-400 mb-2" />
+              <p className="text-sm font-semibold text-gray-800">{nomeTerapeuta}</p>
+              <p className="text-xs text-gray-500">Terapeuta Ocupacional</p>
+              {crfto && <p className="text-xs text-gray-500">CRF/TO: {crfto}</p>}
+            </div>
+            <div className="text-right text-xs text-gray-400">
+              <p>Data: _____ / _____ / _______</p>
+              <p className="mt-2">Local: _________________________</p>
+            </div>
           </div>
-
-          {/* Assinatura + Data */}
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <tbody>
-              <tr>
-                <td style={{ verticalAlign: 'bottom' }}>
-                  <img id="assinatura-preview" alt="Assinatura" style={{ display: 'none', height: '56px', marginBottom: '6px' }} />
-                  <div style={{ width: '220px', borderBottom: '1.5px solid #adb5bd', marginBottom: '8px' }} />
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#212529', margin: '0 0 2px' }}>{nomeTerapeuta}</p>
-                  <p style={{ fontSize: '10px', color: '#6c757d', margin: '0 0 1px' }}>Terapeuta Ocupacional</p>
-                  {crfto && <p style={{ fontSize: '10px', color: '#6c757d', margin: 0 }}>CRF/TO: {crfto}</p>}
-                </td>
-                <td style={{ verticalAlign: 'bottom', textAlign: 'right' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#212529', margin: '0 0 4px' }}>{hoje}</p>
-                  {localStr && <p style={{ fontSize: '10px', color: '#6c757d', margin: 0 }}>{localStr}</p>}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Mini rodapé */}
-          <div style={{ marginTop: '20px', paddingTop: '12px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: '8px', color: '#adb5bd', margin: 0, letterSpacing: '0.5px' }}>
-              TERAPÔ.PRO — SISTEMA DE GESTÃO CLÍNICA PARA TERAPEUTAS OCUPACIONAIS
-            </p>
-            <p style={{ fontSize: '8px', color: '#adb5bd', margin: 0 }}>
-              Gerado em {hoje} · Confidencial
-            </p>
-          </div>
+          <p className="text-center text-xs mt-6 pt-4 border-t border-gray-100" style={{ color: brandColors.primary, opacity: 0.4 }}>
+            Documento emitido pelo Terapô.pro
+          </p>
         </div>
       </div>
     </div>
