@@ -11,6 +11,7 @@ interface Props {
   dataGeracao: string
   onEnviar: (dados: { para: string; cc: string; assunto: string; mensagem: string }) => void
   onFechar: () => void
+  enviando?: boolean
 }
 
 const tiposLabel: Record<string, string> = {
@@ -20,7 +21,7 @@ const tiposLabel: Record<string, string> = {
 export function ModalEmail({
   nomePaciente, emailPaciente = '', emailTerapeuta = '',
   nomeTerapeuta, crfto, tipoRelatorio, dataGeracao,
-  onEnviar, onFechar,
+  onEnviar, onFechar, enviando = false,
 }: Props) {
   const tipo = tiposLabel[tipoRelatorio] || tipoRelatorio
   const [para, setPara] = useState(emailPaciente)
@@ -91,10 +92,10 @@ Terapeuta Ocupacional | CRF/TO: ${crfto}`
           </button>
           <button
             onClick={() => onEnviar({ para, cc, assunto, mensagem })}
-            disabled={!para}
+            disabled={!para || enviando}
             className="flex-1 py-3 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Enviar e-mail
+            {enviando ? 'Enviando...' : 'Enviar e-mail'}
           </button>
         </div>
       </div>

@@ -25,6 +25,7 @@ export function Cadastro() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (form.password.length < 8) return setError('A senha precisa ter no mínimo 8 caracteres.')
     if (form.password !== form.confirmPassword) return setError('As senhas não coincidem.')
     if (!form.agreed) return setError('Você precisa aceitar os termos.')
     setLoading(true)
@@ -34,7 +35,13 @@ export function Cadastro() {
       password: form.password,
       options: { data: { full_name: form.fullName, crf_to: form.crfTo, state: form.state } }
     })
-    if (error) setError(error.message)
+    if (error) {
+      if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
+        setError('Este e-mail já está cadastrado. Tente entrar ou recuperar sua senha.')
+      } else {
+        setError('Não foi possível criar sua conta. Verifique os dados e tente novamente.')
+      }
+    }
     else navigate('/verificar-email', { state: { email: form.email } })
     setLoading(false)
   }

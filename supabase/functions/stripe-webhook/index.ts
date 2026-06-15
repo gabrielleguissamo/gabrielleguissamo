@@ -22,6 +22,26 @@ function planFromPrice(price: Stripe.Price | null | undefined): Plan {
   return "inicial";
 }
 
+// Find the profile linked to a Stripe customer. If the link hasn't been
+// established yet (subscription events can arrive before
+// checkout.session.completed is processed), fall back to looking up the
+// Checkout Session that created this customer.
+async function findProfileByCustomer(customerId: string): Promise<{ id: string } | null> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  if (profile) return profile;
+
+  const sessions = await stripe.checkout.sessions.list({ customer: customerId, limit: 1 });
+  const userId = sessions.data[0]?.client_reference_id;
+  if (!userId) return null;
+
+  await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", userId);
+  return { id: userId };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -53,11 +73,7 @@ Deno.serve(async (req: Request) => {
       const sub = event.data.object as Stripe.Subscription;
       const customerId = sub.customer as string;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("stripe_customer_id", customerId)
-        .maybeSingle();
+      const profile = await findProfileByCustomer(customerId);
       if (!profile) break;
 
       const price = sub.items.data[0]?.price ?? null;
@@ -111,11 +127,7 @@ Deno.serve(async (req: Request) => {
       if (invoice.status !== "open") break;
 
       const customerId = invoice.customer as string;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("stripe_customer_id", customerId)
-        .maybeSingle();
+      const profile = await findProfileByCustomer(customerId);
       if (!profile) break;
 
       const subscriptionId = invoice.subscription as string | null;
@@ -149,11 +161,7 @@ Deno.serve(async (req: Request) => {
       const invoice = event.data.object as Stripe.Invoice;
       const customerId = invoice.customer as string;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("stripe_customer_id", customerId)
-        .maybeSingle();
+      const profile = await findProfileByCustomer(customerId);
       if (!profile) break;
 
       const subscriptionId = invoice.subscription as string | null;

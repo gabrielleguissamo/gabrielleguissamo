@@ -14,7 +14,8 @@ async function callAI(system: string, user: string, maxTokens = 3000): Promise<s
   })
   const data = await res.json() as { error?: string; content?: { text: string }[] }
   if (!res.ok || data.error) throw new Error(data.error ?? `Erro ${res.status}`)
-  return data.content![0].text
+  if (!data.content?.[0]?.text) throw new Error('Resposta vazia da IA')
+  return data.content[0].text
 }
 
 export interface ParamsRelatorio {

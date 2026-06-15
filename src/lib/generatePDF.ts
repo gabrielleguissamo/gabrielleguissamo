@@ -7,6 +7,7 @@ interface PDFOptions {
   brandColors?: { primary: string; secondary?: string; light?: string }
   nomeTerapeuta?: string
   crfto?: string
+  output?: 'save' | 'base64'
 }
 
 export async function gerarPDF({
@@ -15,7 +16,8 @@ export async function gerarPDF({
   brandColors = { primary: '#2d7a3a' },
   nomeTerapeuta = '',
   crfto = '',
-}: PDFOptions): Promise<void> {
+  output = 'save',
+}: PDFOptions): Promise<string | void> {
   const element = document.getElementById(elementId)
   if (!element) throw new Error('Elemento do relatório não encontrado')
 
@@ -96,5 +98,8 @@ export async function gerarPDF({
     pdf.text(footerRight, pageWidth - marginH - 8, pageHeight - 5)
   }
 
+  if (output === 'base64') {
+    return pdf.output('datauristring').split(',')[1]
+  }
   pdf.save(`${nomeArquivo}.pdf`)
 }

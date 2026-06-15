@@ -141,7 +141,7 @@ export function Admin() {
   const ativos = subscriptions.filter(s => s.status === 'active' && s.source === 'stripe')
   const cortesias = subscriptions.filter(s => s.status === 'active' && s.source === 'manual')
   const emTesteStripe = subscriptions.filter(s => s.status === 'trialing')
-  const inadimplentes = subscriptions.filter(s => s.status === 'past_due' || s.status === 'unpaid')
+  const inadimplentes = subscriptions.filter(s => s.status === 'past_due' || s.status === 'unpaid' || s.status === 'incomplete')
   const cancelados = subscriptions.filter(s => s.status === 'canceled')
 
   // Perfis sem assinatura no Stripe ainda — usam o trial interno (trial_ends_at)
@@ -201,7 +201,7 @@ export function Admin() {
         statusKey = 'ativo'
       } else if (sub.status === 'trialing') {
         statusKey = 'teste'
-      } else if (sub.status === 'past_due' || sub.status === 'unpaid') {
+      } else if (sub.status === 'past_due' || sub.status === 'unpaid' || sub.status === 'incomplete') {
         statusKey = 'inadimplente'
       } else if (sub.status === 'canceled') {
         statusKey = 'cancelado'

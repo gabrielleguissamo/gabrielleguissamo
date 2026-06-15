@@ -35,7 +35,12 @@ async function getValidAccessToken(supabase: SupabaseClient, userId: string): Pr
     }),
   });
   const refreshed = await resp.json();
-  if (!resp.ok || !refreshed.access_token) return null;
+  if (!resp.ok || !refreshed.access_token) {
+    // Refresh token is no longer valid (e.g. revoked by the user on Google's side).
+    // Remove the stored connection so the UI stops showing "Conectado".
+    await supabase.from("google_calendar_tokens").delete().eq("user_id", userId);
+    return null;
+  }
 
   const expiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
   await supabase

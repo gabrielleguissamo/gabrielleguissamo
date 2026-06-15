@@ -40,7 +40,7 @@ export function Pacientes() {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showLimitModal, setShowLimitModal] = useState(true)
+  const [showLimitModal, setShowLimitModal] = useState(() => sessionStorage.getItem('limitModalDismissed') !== 'true')
   const [visibleCount, setVisibleCount] = useState(30)
 
   // Form state
@@ -243,7 +243,7 @@ export function Pacientes() {
                   <p className="font-medium text-ink">{p.name}</p>
                   <p className="text-xs text-ink-4">
                     {p.birth_date ? `${calcAge(p.birth_date)} anos` : '—'}
-                    {p.session_value ? ` · R$ ${p.session_value.toFixed(2).replace('.', ',')}/sessão` : ''}
+                    {p.session_value ? ` · R$ ${Number(p.session_value).toFixed(2).replace('.', ',')}/sessão` : ''}
                   </p>
                 </div>
                 <Badge variant={statusVariant[p.status]}>{statusLabel[p.status]}</Badge>
@@ -358,7 +358,7 @@ export function Pacientes() {
               Faça upgrade para um plano com mais espaço e continue cadastrando pacientes sem interrupções.
             </p>
             <div className="flex gap-3">
-              <Button variant="outline" fullWidth onClick={() => setShowLimitModal(false)}>Continuar</Button>
+              <Button variant="outline" fullWidth onClick={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }}>Continuar</Button>
               <Button fullWidth onClick={() => { window.location.href = '/configuracoes' }}>Fazer upgrade</Button>
             </div>
           </Card>

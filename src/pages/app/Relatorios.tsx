@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock } from 'lucide-react'
 import { PLAN_LIMITS } from '../../lib/planLimits'
 import { useAuth } from '../../contexts/AuthContext'
@@ -15,6 +16,7 @@ import { RelatorioPreview } from '../../components/relatorio/RelatorioPreview'
 import { RelatorioCard } from '../../components/relatorio/RelatorioCard'
 import { ModalEmail } from '../../components/relatorio/ModalEmail'
 import { ModalExcluir } from '../../components/relatorio/ModalExcluir'
+import { Toast } from '../../components/ui/Toast'
 
 interface DadosWizard {
   paciente?: { id: string; name: string; email: string }
@@ -48,7 +50,7 @@ export function Relatorios() {
   const [mostrarResumo, setMostrarResumo] = useState(false)
 
   const [gerando, setGerando] = useState(false)
-  const [gerандоResumo, setGerандоResumo] = useState(false)
+  const [gerandoResumo, setGerandoResumo] = useState(false)
   const [erro, setErro] = useState('')
 
   const [brandColors, setBrandColors] = useState<BrandColors>(defaultBrandColors)
@@ -60,6 +62,8 @@ export function Relatorios() {
   const [modalExcluir, setModalExcluir] = useState<RelatorioGerado | null>(null)
   const [showReportLimitModal, setShowReportLimitModal] = useState(true)
   const [visibleCount, setVisibleCount] = useState(12)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [enviandoEmail, setEnviandoEmail] = useState(false)
 
   async function fetchRelatorios() {
     if (!user) return
@@ -162,7 +166,7 @@ export function Relatorios() {
 
   async function handleGerarResumo() {
     if (!relatorioAtual) return
-    setGerандоResumo(true)
+    setGerandoResumo(true)
     try {
       const resumo = await gerarResumoFamiliar({
         nomePaciente: relatorioAtual.patient_name,
@@ -179,7 +183,7 @@ export function Relatorios() {
     } catch (e) {
       setErro(traduzirErroAPI(e as Error))
     } finally {
-      setGerандоResumo(false)
+      setGerandoResumo(false)
     }
   }
 
@@ -224,9 +228,35 @@ export function Relatorios() {
     setTela('resultado')
   }
 
+  function ensureVisualizando(rel: RelatorioGerado) {
+    if (relatorioAtual?.id !== rel.id || tela !== 'resultado') {
+      flushSync(() => handleVisualizar(rel))
+    }
+  }
+
   async function handleDownload(rel: RelatorioGerado) {
+    ensureVisualizando(rel)
     const nomeArquivo = `relatorio_${rel.patient_name.replace(/\s+/g, '_')}_${rel.data_geracao.replace(/\//g, '-')}.pdf`
     await gerarPDF({ elementId: 'relatorio-preview', nomeArquivo, brandColors, nomeTerapeuta, crfto })
+  }
+
+  async function handleEnviarEmail(rel: RelatorioGerado, dados: { para: string; cc: string; assunto: string; mensagem: string }) {
+    ensureVisualizando(rel)
+    setEnviandoEmail(true)
+    try {
+      const nomeArquivo = `relatorio_${rel.patient_name.replace(/\s+/g, '_')}_${rel.data_geracao.replace(/\//g, '-')}`
+      const pdfBase64 = await gerarPDF({ elementId: 'relatorio-preview', nomeArquivo, brandColors, nomeTerapeuta, crfto, output: 'base64' })
+      const { error } = await supabase.functions.invoke('send-report-email', {
+        body: { to: dados.para, cc: dados.cc || undefined, subject: dados.assunto, message: dados.mensagem, pdfBase64, filename: `${nomeArquivo}.pdf` },
+      })
+      if (error) throw error
+      setToast({ message: 'E-mail enviado com sucesso!', type: 'success' })
+      setModalEmail(null)
+    } catch {
+      setToast({ message: 'Erro ao enviar e-mail. Tente novamente.', type: 'error' })
+    } finally {
+      setEnviandoEmail(false)
+    }
   }
 
   function handleWhatsApp(rel: RelatorioGerado) {
@@ -264,7 +294,8 @@ export function Relatorios() {
   const reportsThisMonth = relatorios.filter(r => {
     const [, month, year] = r.data_geracao.split('/')
     if (!month || !year) return false
-    return parseInt(month, 10) - 1 === now.getMonth() && 2000 + parseInt(year, 10) === now.getFullYear()
+    const fullYear = year.length === 2 ? 2000 + parseInt(year, 10) : parseInt(year, 10)
+    return parseInt(month, 10) - 1 === now.getMonth() && fullYear === now.getFullYear()
   })
   const reportLimitReached = reportsThisMonth.length >= reportLimit
   const planLabel = plan === 'inicial' ? 'Inicial' : plan === 'profissional' ? 'Profissional' : 'Business'
@@ -346,7 +377,7 @@ export function Relatorios() {
                   relatorio={rel}
                   onVisualizar={() => handleVisualizar(rel)}
                   onDownload={() => handleDownload(rel)}
-                  onEmail={() => setModalEmail(rel)}
+                  onEmail={() => { ensureVisualizando(rel); setModalEmail(rel) }}
                   onWhatsApp={() => handleWhatsApp(rel)}
                   onExcluir={() => setModalExcluir(rel)}
                 />
@@ -365,21 +396,6 @@ export function Relatorios() {
           </>
         )}
 
-        {modalEmail && (
-          <ModalEmail
-            nomePaciente={modalEmail.patient_name}
-            nomeTerapeuta={nomeTerapeuta}
-            crfto={crfto}
-            emailTerapeuta={user?.email}
-            tipoRelatorio={modalEmail.tipo}
-            dataGeracao={modalEmail.data_geracao}
-            onEnviar={(dados) => {
-              alert(`E-mail para ${dados.para} será enviado em breve.\n\nIntegração com servidor de e-mail em desenvolvimento.`)
-              setModalEmail(null)
-            }}
-            onFechar={() => setModalEmail(null)}
-          />
-        )}
         {modalExcluir && (
           <ModalExcluir
             nomePaciente={modalExcluir.patient_name}
@@ -413,6 +429,8 @@ export function Relatorios() {
             </div>
           </div>
         )}
+
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     )
   }
@@ -478,10 +496,10 @@ export function Relatorios() {
               </button>
               <button
                 onClick={handleGerarResumo}
-                disabled={gerандоResumo}
+                disabled={gerandoResumo}
                 className="flex items-center gap-1.5 px-4 py-2 border border-green-200 bg-green-50 text-green-700 rounded-full text-xs font-semibold hover:bg-green-100 disabled:opacity-50"
               >
-                {gerандоResumo
+                {gerandoResumo
                   ? <div className="w-3 h-3 border border-green-500 border-t-transparent rounded-full animate-spin" />
                   : <Sparkles size={13} />}
                 Resumo familiar
@@ -574,13 +592,13 @@ export function Relatorios() {
           emailTerapeuta={user?.email}
           tipoRelatorio={relatorioAtual.tipo}
           dataGeracao={relatorioAtual.data_geracao}
-          onEnviar={(dados) => {
-            alert(`E-mail para ${dados.para} será enviado em breve.`)
-            setModalEmail(null)
-          }}
+          enviando={enviandoEmail}
+          onEnviar={(dados) => handleEnviarEmail(relatorioAtual, dados)}
           onFechar={() => setModalEmail(null)}
         />
       )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

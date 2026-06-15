@@ -7,7 +7,11 @@ import { Button } from '../../components/ui/Button'
 export function VerificarEmail() {
   const navigate = useNavigate()
   const location = useLocation()
-  const email = (location.state as { email?: string } | null)?.email || ''
+  const stateEmail = (location.state as { email?: string } | null)?.email
+  if (stateEmail) {
+    sessionStorage.setItem('verificarEmail', stateEmail)
+  }
+  const email = stateEmail || sessionStorage.getItem('verificarEmail') || ''
 
   const CODE_LENGTH = 8
 
@@ -74,6 +78,7 @@ export function VerificarEmail() {
     if (error) {
       setError('Código inválido ou expirado. Tente novamente ou reenvie o código.')
     } else {
+      sessionStorage.removeItem('verificarEmail')
       navigate('/dashboard')
     }
     setLoading(false)

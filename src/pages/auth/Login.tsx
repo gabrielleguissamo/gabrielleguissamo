@@ -21,8 +21,12 @@ export function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       if (error.message.toLowerCase().includes('email not confirmed')) {
-        await supabase.auth.resend({ type: 'signup', email })
-        navigate('/verificar-email', { state: { email } })
+        const { error: resendError } = await supabase.auth.resend({ type: 'signup', email })
+        if (resendError) {
+          setError('Seu e-mail ainda não foi confirmado e não conseguimos reenviar o código agora. Tente novamente em alguns instantes.')
+        } else {
+          navigate('/verificar-email', { state: { email } })
+        }
       } else {
         setError('E-mail ou senha inválidos. Tente novamente.')
       }

@@ -67,6 +67,7 @@ Deno.serve(async (req: Request) => {
       .from("sessions")
       .select("date, time, type, patients(name)")
       .eq("id", sessionId)
+      .eq("user_id", userData.user.id)
       .single();
 
     if (!session) {

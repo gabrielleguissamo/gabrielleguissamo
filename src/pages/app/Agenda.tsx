@@ -41,7 +41,8 @@ function addDays(date: Date, days: number): Date {
 }
 
 function toISO(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 export function Agenda() {
@@ -153,10 +154,23 @@ export function Agenda() {
     if (!user) return
     const { data: existing } = await supabase
       .from('transactions')
-      .select('id')
+      .select('id, status')
       .eq('session_id', session.id)
       .maybeSingle()
-    if (existing) return
+
+    if (existing) {
+      if (existing.status === 'cancelado') {
+        const { error } = await supabase
+          .from('transactions')
+          .update({ status: 'pendente' })
+          .eq('id', existing.id)
+        if (error) {
+          setToast({ message: 'Sessão confirmada, mas houve erro ao reativar lançamento financeiro', type: 'error' })
+        }
+      }
+      return
+    }
+
     const patient = patients.find(p => p.id === session.patient_id)
     const { error } = await supabase.from('transactions').insert({
       user_id: user.id,
@@ -210,6 +224,27 @@ export function Agenda() {
         if (session.google_event_id && googleConnected) {
           try {
             await deleteGoogleCalendarEvent(session.google_event_id)
+            await supabase.from('sessions').update({ google_event_id: null }).eq('id', session.id)
+            setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: null } : s))
+          } catch {
+            // Silently ignore Google sync errors
+          }
+        }
+      } else if (newStatus === 'pendente') {
+        // Reactivating a cancelled session: recreate the Google Calendar event if needed
+        if (!session.google_event_id && googleConnected) {
+          try {
+            const patient = patients.find(p => p.id === session.patient_id)
+            const googleEventId = await createGoogleCalendarEvent({
+              title: patient?.name ?? session.patients?.name ?? 'Paciente',
+              date: session.date,
+              time: session.time,
+              duration: session.duration,
+              description: session.notes ?? undefined,
+              type: session.type,
+            })
+            await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', session.id)
+            setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: googleEventId } : s))
           } catch {
             // Silently ignore Google sync errors
           }
@@ -230,7 +265,7 @@ export function Agenda() {
 
   function getSessionForCell(dayIndex: number, hour: string): SessionWithPatient | undefined {
     const dateStr = toISO(weekDates[dayIndex])
-    return sessions.find(s => s.date === dateStr && s.time.slice(0, 5) === hour)
+    return sessions.find(s => s.date === dateStr && s.time.padStart(5, '0').slice(0, 5) === hour)
   }
 
   return (
