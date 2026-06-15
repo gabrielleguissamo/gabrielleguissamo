@@ -197,6 +197,13 @@ export function Agenda() {
       setSessions(prev => prev.map(s => s.id === session.id ? { ...s, status: newStatus } : s))
       if (newStatus === 'confirmado') {
         await createSessionTransaction(session)
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: { type: 'confirmacao', sessionId: session.id },
+          })
+        } catch {
+          // Silently ignore email errors
+        }
       } else if (newStatus === 'cancelado') {
         await cancelSessionTransaction(session.id)
         // If cancelling and has a Google event, delete it
