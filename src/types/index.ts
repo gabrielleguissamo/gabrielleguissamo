@@ -43,6 +43,7 @@ export interface Profile {
   avatar_url?: string
   avatar_choice?: string
   support_channel?: string
+  preferred_name?: string
   onboarding_completed?: boolean
   notif_lembretes?: boolean
   notif_confirmacoes?: boolean
