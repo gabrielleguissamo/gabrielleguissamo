@@ -41,6 +41,9 @@ export interface Profile {
   trial_ends_at?: string
   stripe_customer_id?: string
   avatar_url?: string
+  avatar_choice?: string
+  support_channel?: string
+  onboarding_completed?: boolean
   notif_lembretes?: boolean
   notif_confirmacoes?: boolean
   notif_relatorio_semanal?: boolean

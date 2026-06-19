@@ -5,16 +5,21 @@ import { Topbar } from './Topbar'
 import { useAuth } from '../../contexts/AuthContext'
 import { TrialExpired } from '../../pages/app/TrialExpired'
 import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { OnboardingModal } from '../onboarding/OnboardingModal'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, hasActiveSubscription, trialDaysLeft } = useAuth()
+  const { user, profile, hasActiveSubscription, trialDaysLeft } = useAuth()
 
   const isAdmin = user?.email === ADMIN_EMAIL
   const trialExpired = !isAdmin && !hasActiveSubscription && trialDaysLeft !== null && trialDaysLeft <= 0
 
   if (trialExpired) {
     return <TrialExpired />
+  }
+
+  if (profile && !profile.onboarding_completed) {
+    return <OnboardingModal />
   }
 
   const showTrialBanner = !isAdmin && !hasActiveSubscription && trialDaysLeft !== null && trialDaysLeft > 0
