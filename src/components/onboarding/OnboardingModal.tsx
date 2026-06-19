@@ -5,6 +5,16 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { formatPhone } from '../../lib/masks'
 
+function isValidBrazilianPhone(value: string): boolean {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length !== 10 && digits.length !== 11) return false
+  const ddd = parseInt(digits.slice(0, 2), 10)
+  if (ddd < 11 || ddd > 99) return false
+  if (digits.length === 11 && digits[2] !== '9') return false
+  if (/^(\d)\1+$/.test(digits.slice(2))) return false
+  return true
+}
+
 export function OnboardingModal() {
   const { user, refreshProfile } = useAuth()
   const [preferredName, setPreferredName] = useState('')
@@ -16,7 +26,7 @@ export function OnboardingModal() {
     e.preventDefault()
     if (!user) return
     if (!preferredName.trim()) return setError('Diga como você prefere ser chamado.')
-    if (phone.replace(/\D/g, '').length < 10) return setError('Informe um WhatsApp válido.')
+    if (!isValidBrazilianPhone(phone)) return setError('Informe um número de WhatsApp válido, com DDD.')
 
     setLoading(true)
     setError('')
@@ -56,7 +66,7 @@ export function OnboardingModal() {
             required
           />
           <Input
-            label="WhatsApp"
+            label="WhatsApp para suporte"
             placeholder="(00) 00000-0000"
             value={phone}
             onChange={e => setPhone(formatPhone(e.target.value))}
