@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  hasActiveSubscription: boolean
+  trialDaysLeft: number | null
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -19,14 +21,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    if (data) setProfile(data as Profile)
+    const [profileRes, subRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).single(),
+      supabase.from('subscriptions').select('id').eq('user_id', userId).in('status', ['active', 'trialing']).maybeSingle(),
+    ])
+    if (profileRes.data) setProfile(profileRes.data as Profile)
+    setHasActiveSubscription(!!subRes.data)
   }
 
   useEffect(() => {
@@ -51,20 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = async () => {
     const currentUser = user
     if (!currentUser) return
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .single()
-    if (data) setProfile(data as Profile)
+    await fetchProfile(currentUser.id)
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
   }
 
+  const trialDaysLeft = profile?.trial_ends_at
+    ? Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, hasActiveSubscription, trialDaysLeft, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
