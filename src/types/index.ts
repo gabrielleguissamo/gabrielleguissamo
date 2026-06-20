@@ -38,13 +38,9 @@ export interface Profile {
   email_envio?: string
   logo_url?: string
   plan: 'inicial' | 'profissional' | 'business'
-  trial_ends_at?: string
+  free_reports_used: number
   stripe_customer_id?: string
   avatar_url?: string
-  avatar_choice?: string
-  support_channel?: string
-  preferred_name?: string
-  onboarding_completed?: boolean
   notif_lembretes?: boolean
   notif_confirmacoes?: boolean
   notif_relatorio_semanal?: boolean
