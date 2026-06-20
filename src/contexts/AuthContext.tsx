@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
+import { FREE_REPORT_LIMIT } from '../lib/planLimits'
 
 interface AuthContextType {
   user: User | null
@@ -9,7 +10,8 @@ interface AuthContextType {
   profile: Profile | null
   loading: boolean
   hasActiveSubscription: boolean
-  trialDaysLeft: number | null
+  freeReportsUsed: number
+  freeReportsLeft: number
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -61,12 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
-  const trialDaysLeft = profile?.trial_ends_at
-    ? Math.ceil((new Date(profile.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null
+  const freeReportsUsed = profile?.free_reports_used ?? 0
+  const freeReportsLeft = Math.max(0, FREE_REPORT_LIMIT - freeReportsUsed)
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, hasActiveSubscription, trialDaysLeft, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, hasActiveSubscription, freeReportsUsed, freeReportsLeft, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
