@@ -14,6 +14,7 @@ import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import type { Profile } from '../../types'
 import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { FREE_REPORT_LIMIT } from '../../lib/planLimits'
 
 const PLAN_LABELS: Record<string, string> = {
   inicial: 'Inicial',
@@ -43,10 +44,8 @@ interface PaymentRow {
   created_at: string
 }
 
-function diasRestantes(trialEndsAt?: string) {
-  if (!trialEndsAt) return null
-  const ms = new Date(trialEndsAt).getTime() - Date.now()
-  return Math.ceil(ms / (1000 * 60 * 60 * 24))
+function relatoriosGratuitosRestantes(p: Profile) {
+  return Math.max(0, FREE_REPORT_LIMIT - (p.free_reports_used ?? 0))
 }
 
 function formatBRL(value: number) {
@@ -144,9 +143,9 @@ export function Admin() {
   const inadimplentes = subscriptions.filter(s => s.status === 'past_due' || s.status === 'unpaid' || s.status === 'incomplete')
   const cancelados = subscriptions.filter(s => s.status === 'canceled')
 
-  // Perfis sem assinatura no Stripe ainda — usam o trial interno (trial_ends_at)
+  // Perfis sem assinatura no Stripe ainda — usam os 5 relatórios gratuitos vitalícios
   const semAssinatura = profiles.filter(p => !subsByUser.has(p.id))
-  const trialInternoAtivo = semAssinatura.filter(p => (diasRestantes(p.trial_ends_at) ?? -1) > 0)
+  const trialInternoAtivo = semAssinatura.filter(p => relatoriosGratuitosRestantes(p) > 0)
 
   const paidPayments = payments.filter(p => p.status === 'paid')
   const pendingPayments = payments.filter(p => p.status === 'pending')
@@ -189,7 +188,7 @@ export function Admin() {
   const filteredProfiles = profiles.filter(p => {
     const sub = subsByUser.get(p.id)
     const plan = sub?.plan ?? p.plan
-    const dias = diasRestantes(p.trial_ends_at)
+    const reportsLeft = relatoriosGratuitosRestantes(p)
     let statusKey: 'ativo' | 'cortesia' | 'teste' | 'inadimplente' | 'cancelado' | 'sem_assinatura' = 'sem_assinatura'
     let statusLabel = 'Sem assinatura'
     if (sub) {
@@ -206,7 +205,7 @@ export function Admin() {
       } else if (sub.status === 'canceled') {
         statusKey = 'cancelado'
       }
-    } else if (dias !== null && dias > 0) {
+    } else if (reportsLeft > 0) {
       statusKey = 'teste'
       statusLabel = 'Em teste'
     }
@@ -431,7 +430,7 @@ export function Admin() {
               )}
               {pagedProfiles.map(p => {
                 const sub = subsByUser.get(p.id)
-                const dias = diasRestantes(p.trial_ends_at)
+                const reportsLeft = relatoriosGratuitosRestantes(p)
                 const totalPago = totalPagoPorUsuario.get(p.id) ?? 0
 
                 let statusBadge: React.ReactNode
@@ -444,8 +443,8 @@ export function Admin() {
                   mensalidade = sub.amount
                   proximaCobranca = sub.current_period_end
                   statusBadge = <Badge variant={SUB_STATUS_VARIANTS[sub.status]}>{SUB_STATUS_LABELS[sub.status]}</Badge>
-                } else if (dias !== null && dias > 0) {
-                  statusBadge = <Badge variant="warning">Em teste · {dias} dia{dias !== 1 ? 's' : ''} restante{dias !== 1 ? 's' : ''}</Badge>
+                } else if (reportsLeft > 0) {
+                  statusBadge = <Badge variant="warning">Em teste · {reportsLeft} relatório{reportsLeft !== 1 ? 's' : ''} grátis restante{reportsLeft !== 1 ? 's' : ''}</Badge>
                 } else {
                   statusBadge = <Badge variant="danger">Sem assinatura</Badge>
                 }
