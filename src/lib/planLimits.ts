@@ -5,3 +5,6 @@ export const PLAN_LIMITS: Record<PlanKey, { patients: number; reportsPerMonth: n
   profissional: { patients: 150, reportsPerMonth: 200 },
   business: { patients: Infinity, reportsPerMonth: Infinity },
 }
+
+// Relatórios gratuitos vitalícios para quem ainda não assinou nenhum plano.
+export const FREE_REPORT_LIMIT = 5
