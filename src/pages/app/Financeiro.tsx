@@ -33,7 +33,6 @@ export function Financeiro() {
   const { user } = useAuth()
   const [transactions, setTransactions] = useState<TransactionWithPatient[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
-  const [confirmedSessions, setConfirmedSessions] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -137,7 +136,7 @@ export function Financeiro() {
 
   const metrics = [
     { label: 'Receita do mês', value: formatBRL(monthRevenue), icon: TrendingUp, color: 'text-green-500' },
-    { label: 'Sessões realizadas', value: String(confirmedSessions), icon: Calendar, color: 'text-blue-500' },
+    { label: 'Sessões realizadas', value: String(paidSessions.length), icon: Calendar, color: 'text-blue-500' },
     { label: 'Ticket médio', value: formatBRL(avgTicket), icon: DollarSign, color: 'text-green-400' },
     { label: 'Inadimplência', value: formatBRL(overdue), icon: AlertCircle, color: 'text-orange-400' },
   ]
