@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase'
 import { isGoogleCalendarConnected, getGoogleCalendarAuthUrl, disconnectGoogleCalendar } from '../../lib/googleCalendar'
 import { getStripeCheckoutUrl, getWhatsappCeoUrl } from '../../lib/stripeConfig'
 import { formatPhone } from '../../lib/masks'
+import { FREE_REPORT_LIMIT } from '../../lib/planLimits'
 
 type Tab = 'perfil' | 'clinica' | 'notificacoes' | 'plano' | 'seguranca'
 type PlanKey = 'inicial' | 'profissional' | 'business'
@@ -55,7 +56,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 export function Configuracoes() {
-  const { user, profile, refreshProfile, signOut } = useAuth()
+  const { user, profile, refreshProfile, signOut, hasActiveSubscription } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>('perfil')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
@@ -591,11 +592,16 @@ export function Configuracoes() {
       {activeTab === 'plano' && (
         <div className="max-w-4xl">
           <h3 className="font-serif text-lg font-semibold text-ink mb-4">Seu plano</h3>
+          {!hasActiveSubscription && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              Você ainda não assinou nenhum plano. Está no período gratuito de {FREE_REPORT_LIMIT} relatórios vitalícios.
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PLAN_ORDER.map(key => {
               const info = PLANO_INFO[key]
-              const isCurrent = currentPlan === key
-              const isUpgrade = PLAN_ORDER.indexOf(key) > PLAN_ORDER.indexOf(currentPlan)
+              const isCurrent = hasActiveSubscription && currentPlan === key
+              const isUpgrade = !hasActiveSubscription || PLAN_ORDER.indexOf(key) > PLAN_ORDER.indexOf(currentPlan)
               return (
                 <Card key={key} className={`p-6 flex flex-col ${isCurrent ? 'border-2 border-green-500' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
@@ -613,10 +619,10 @@ export function Configuracoes() {
                   </ul>
                   {isCurrent ? (
                     <Button disabled fullWidth>Plano atual</Button>
-                  ) : isUpgrade && key === 'business' ? (
+                  ) : key === 'business' ? (
                     <Button variant="outline" fullWidth onClick={handleWhatsappCeo}>Falar com o time</Button>
                   ) : isUpgrade ? (
-                    <Button fullWidth onClick={() => handleUpgrade(key as 'inicial' | 'profissional')}>Fazer upgrade</Button>
+                    <Button fullWidth onClick={() => handleUpgrade(key as 'inicial' | 'profissional')}>{hasActiveSubscription ? 'Fazer upgrade' : 'Assinar agora'}</Button>
                   ) : (
                     <Button variant="ghost" fullWidth disabled>Plano anterior</Button>
                   )}
