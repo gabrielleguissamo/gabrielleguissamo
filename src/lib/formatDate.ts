@@ -11,6 +11,17 @@ export function formatarData(data: string | Date): string {
   return `${dia}/${mes}/${ano}`
 }
 
+export function calcAge(birthDate: string): number {
+  // Parse manual evita o bug de new Date('YYYY-MM-DD') interpretar como UTC
+  // e desalinhar a idade perto do aniversario em fusos atras de UTC.
+  const [y, m, d] = birthDate.split('-').map(Number)
+  const hoje = new Date()
+  let idade = hoje.getFullYear() - y
+  const diffMes = (hoje.getMonth() + 1) - m
+  if (diffMes < 0 || (diffMes === 0 && hoje.getDate() < d)) idade--
+  return idade
+}
+
 export function formatarDataElegante(data: string | Date): string {
   if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
     const [year, month, day] = data.split('-')
