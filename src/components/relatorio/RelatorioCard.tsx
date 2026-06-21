@@ -57,7 +57,8 @@ export function RelatorioCard({ relatorio, onVisualizar, onDownload, onEmail, on
         </div>
         <button
           onClick={onExcluir}
-          className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50"
+          aria-label="Excluir relatório"
+          className="opacity-0 group-hover:opacity-100 transition-opacity w-11 h-11 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50"
           title="Excluir"
         >
           <Trash2 size={15} />
@@ -71,13 +72,13 @@ export function RelatorioCard({ relatorio, onVisualizar, onDownload, onEmail, on
         >
           Visualizar
         </button>
-        <button onClick={onDownload} className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-400 transition-all flex-shrink-0" title="Download PDF">
+        <button onClick={onDownload} aria-label="Baixar PDF" className="w-11 h-11 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-400 transition-all flex-shrink-0" title="Download PDF">
           <Download size={14} />
         </button>
-        <button onClick={onEmail} className="w-8 h-8 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-green-300 hover:text-green-600 transition-all flex-shrink-0" title="E-mail">
+        <button onClick={onEmail} aria-label="Enviar por e-mail" className="w-11 h-11 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-green-300 hover:text-green-600 transition-all flex-shrink-0" title="E-mail">
           <Mail size={14} />
         </button>
-        <button onClick={onWhatsApp} className="w-8 h-8 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-green-300 hover:text-green-600 transition-all flex-shrink-0" title="WhatsApp">
+        <button onClick={onWhatsApp} aria-label="Enviar por WhatsApp" className="w-11 h-11 rounded-full border border-gray-200 text-gray-500 flex items-center justify-center hover:border-green-300 hover:text-green-600 transition-all flex-shrink-0" title="WhatsApp">
           <MessageCircle size={14} />
         </button>
       </div>
