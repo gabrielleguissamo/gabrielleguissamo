@@ -10,19 +10,11 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { PLAN_LIMITS } from '../../lib/planLimits'
 import { formatCPF, formatPhone } from '../../lib/masks'
+import { calcAge } from '../../lib/formatDate'
 import type { Patient } from '../../types'
 
 const statusVariant = { ativo: 'success' as const, em_espera: 'warning' as const, inativo: 'neutral' as const }
 const statusLabel = { ativo: 'Ativo', em_espera: 'Em espera', inativo: 'Inativo' }
-
-function calcAge(birth_date: string): number {
-  const today = new Date()
-  const birth = new Date(birth_date)
-  let age = today.getFullYear() - birth.getFullYear()
-  const m = today.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
-  return age
-}
 
 function initials(name: string): string {
   const parts = name.trim().split(' ')
