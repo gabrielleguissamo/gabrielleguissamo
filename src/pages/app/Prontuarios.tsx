@@ -189,6 +189,12 @@ export function Prontuarios() {
   }
 
   function formatDate(dateStr: string) {
+    // Datas YYYY-MM-DD sao interpretadas como UTC por new Date(); parse manual evita
+    // o dia ficar 1 a menos em fusos horarios atras de UTC (ex: America/Sao_Paulo).
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [y, m, d] = dateStr.split('-')
+      return d + '/' + m + '/' + y
+    }
     const d = new Date(dateStr)
     return d.toLocaleDateString('pt-BR')
   }
