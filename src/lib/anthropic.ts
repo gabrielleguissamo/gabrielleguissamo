@@ -22,6 +22,7 @@ export interface ParamsRelatorio {
   briefing: string
   tipoRelatorio: 'evolucao' | 'avaliacao' | 'alta' | 'encaminhamento'
   nomePaciente: string
+  dataNascimento?: string
   financiamento: 'convenio' | 'particular'
   cidPrincipal: string
   cidSecundario?: string
@@ -46,8 +47,8 @@ export async function gerarRelatorio(p: ParamsRelatorio): Promise<string> {
   const user = `Gere relatório clínico de TO — tipo: ${p.tipoRelatorio.toUpperCase()}
 
 DADOS:
-- Paciente: ${p.nomePaciente}
-- Terapeuta: ${p.nomeTerapeuta} | CRF/TO: ${p.crfto}
+- Paciente: ${p.nomePaciente}${p.dataNascimento ? ` | Data de nascimento: ${p.dataNascimento}` : ''}
+- Terapeuta: ${p.nomeTerapeuta}${p.crfto ? ` | CRF/TO: ${p.crfto}` : ''}
 - Período: ${p.periodoInicio} a ${p.periodoFim}
 - CID-10: ${p.cidPrincipal}${p.cidSecundario ? ` / ${p.cidSecundario}` : ''}
 ${p.cif ? `- CIF: ${p.cif}` : ''}
@@ -66,11 +67,11 @@ REGRAS:
 - Português brasileiro formal
 - Terminologia COFFITO/AOTA
 - Conteúdo real baseado no briefing — sem texto genérico
-- Sem placeholders como "[descrever aqui]"
+- NUNCA usar placeholders entre colchetes (ex: "[descrever aqui]", "[data da sessão]", "[tempo de sessão]", "[A inserir]", "[a definir]"). Se um dado não foi fornecido (duração, frequência, CRF, data de nascimento etc.), OMITA a frase ou o dado inteiro — não invente e não deixe lacunas visíveis
 - Usar ## para títulos de seção
 - Usar **negrito** apenas para dados importantes
 - NÃO usar --- como separador
-- NÃO repetir dados de identificação (já no cabeçalho)
+- NÃO repita o cabeçalho de identificação (paciente, data de nascimento, idade, terapeuta, CRF, período, diagnóstico, financiamento, data) — esses dados já aparecem no cabeçalho do documento
 - Começar diretamente pela seção 2`
 
   return callAI(system, user, 3000)
