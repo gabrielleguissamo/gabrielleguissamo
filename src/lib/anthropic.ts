@@ -1,6 +1,19 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const PROXY_URL = `${SUPABASE_URL}/functions/v1/gerar-relatorio`
 
+function removerCabecalhoDuplicado(texto: string): string {
+  const linhas = texto.split('\n')
+  const idx = linhas.findIndex(l => /^#{1,3}\s+/.test(l.trim()))
+  if (idx <= 0) return texto
+  const antes = linhas.slice(0, idx).join('\n')
+  // So remove se o bloco antes do primeiro titulo parecer um cabecalho de
+  // identificacao repetido (curto e contendo "Paciente:"), nunca conteudo real.
+  if (/Paciente:/i.test(antes) && antes.length < 600) {
+    return linhas.slice(idx).join('\n').trim()
+  }
+  return texto
+}
+
 async function callAI(system: string, user: string, maxTokens = 3000): Promise<string> {
   const res = await fetch(PROXY_URL, {
     method: 'POST',
@@ -74,7 +87,8 @@ REGRAS:
 - NÃO repita o cabeçalho de identificação (paciente, data de nascimento, idade, terapeuta, CRF, período, diagnóstico, financiamento, data) — esses dados já aparecem no cabeçalho do documento
 - Começar diretamente pela seção 2`
 
-  return callAI(system, user, 3000)
+  const resposta = await callAI(system, user, 3000)
+  return removerCabecalhoDuplicado(resposta)
 }
 
 export async function gerarResumoFamiliar(params: {
