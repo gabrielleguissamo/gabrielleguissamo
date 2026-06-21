@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock } from 'lucide-react'
-import { PLAN_LIMITS } from '../../lib/planLimits'
+import { PLAN_LIMITS, FREE_REPORT_LIMIT } from '../../lib/planLimits'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { gerarRelatorio, gerarResumoFamiliar, traduzirErroAPI } from '../../lib/anthropic'
@@ -16,6 +16,7 @@ import { RelatorioPreview } from '../../components/relatorio/RelatorioPreview'
 import { RelatorioCard } from '../../components/relatorio/RelatorioCard'
 import { ModalEmail } from '../../components/relatorio/ModalEmail'
 import { ModalExcluir } from '../../components/relatorio/ModalExcluir'
+import { UpgradeModal } from '../../components/relatorio/UpgradeModal'
 import { Toast } from '../../components/ui/Toast'
 
 interface DadosWizard {
@@ -31,7 +32,7 @@ interface DadosWizard {
 }
 
 export function Relatorios() {
-  const { profile, user } = useAuth()
+  const { profile, user, hasActiveSubscription, freeReportsUsed, refreshProfile } = useAuth()
   const nomeTerapeuta = profile?.full_name || 'Terapeuta'
   const crfto = profile?.crf_to || ''
 
@@ -61,6 +62,7 @@ export function Relatorios() {
   const [modalEmail, setModalEmail] = useState<RelatorioGerado | null>(null)
   const [modalExcluir, setModalExcluir] = useState<RelatorioGerado | null>(null)
   const [showReportLimitModal, setShowReportLimitModal] = useState(true)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [visibleCount, setVisibleCount] = useState(12)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [enviandoEmail, setEnviandoEmail] = useState(false)
@@ -157,6 +159,7 @@ export function Relatorios() {
       setEditando(false)
       setRelatorios(prev => [rel, ...prev])
       setTela('resultado')
+      if (!hasActiveSubscription) await refreshProfile()
     } catch (e) {
       setErro(traduzirErroAPI(e as Error))
     } finally {
@@ -281,7 +284,10 @@ export function Relatorios() {
   }
 
   function novoRelatorio() {
-    if (reportLimitReached) return
+    if (reportLimitReached) {
+      if (!hasActiveSubscription) setShowUpgradeModal(true)
+      return
+    }
     setDadosWizard({})
     setBriefing('')
     setPasso(1)
@@ -289,7 +295,8 @@ export function Relatorios() {
   }
 
   const plan = profile?.plan ?? 'inicial'
-  const reportLimit = PLAN_LIMITS[plan].reportsPerMonth
+  const planLabel = plan === 'inicial' ? 'Inicial' : plan === 'profissional' ? 'Profissional' : 'Business'
+
   const now = new Date()
   const reportsThisMonth = relatorios.filter(r => {
     const [, month, year] = r.data_geracao.split('/')
@@ -297,10 +304,13 @@ export function Relatorios() {
     const fullYear = year.length === 2 ? 2000 + parseInt(year, 10) : parseInt(year, 10)
     return parseInt(month, 10) - 1 === now.getMonth() && fullYear === now.getFullYear()
   })
-  const reportLimitReached = reportsThisMonth.length >= reportLimit
-  const planLabel = plan === 'inicial' ? 'Inicial' : plan === 'profissional' ? 'Profissional' : 'Business'
+
+  // Quem ainda não assinou usa os 5 relatórios gratuitos vitalícios em vez do limite mensal do plano.
+  const reportLimit = hasActiveSubscription ? PLAN_LIMITS[plan].reportsPerMonth : FREE_REPORT_LIMIT
+  const reportsUsedForLimit = hasActiveSubscription ? reportsThisMonth.length : freeReportsUsed
+  const reportLimitReached = reportsUsedForLimit >= reportLimit
   const isUnlimited = !Number.isFinite(reportLimit)
-  const reportUsagePercent = isUnlimited ? 0 : Math.min(100, (reportsThisMonth.length / reportLimit) * 100)
+  const reportUsagePercent = isUnlimited ? 0 : Math.min(100, (reportsUsedForLimit / reportLimit) * 100)
   const reportNearLimit = !isUnlimited && reportUsagePercent >= 90 && !reportLimitReached
   const reportBarColor = reportUsagePercent >= 100 ? 'bg-red-500' : reportUsagePercent >= 90 ? 'bg-amber-500' : 'bg-green-500'
 
@@ -310,7 +320,7 @@ export function Relatorios() {
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'Fraunces, serif' }}>Relatórios</h1>
+            <h1 className="font-serif text-2xl font-bold text-gray-800">Relatórios</h1>
             <p className="text-sm text-gray-500 mt-1">{relatorios.length} relatório{relatorios.length !== 1 ? 's' : ''} gerado{relatorios.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -323,7 +333,7 @@ export function Relatorios() {
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
             <button
               onClick={novoRelatorio}
-              disabled={reportLimitReached}
+              disabled={reportLimitReached && hasActiveSubscription}
               className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-400 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Novo relatório
@@ -334,7 +344,11 @@ export function Relatorios() {
         {!isUnlimited && (
           <div>
             <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
-              <span>{reportsThisMonth.length} de {reportLimit} relatórios este mês (plano {planLabel})</span>
+              <span>
+                {hasActiveSubscription
+                  ? `${reportsUsedForLimit} de ${reportLimit} relatórios este mês (plano ${planLabel})`
+                  : `${reportsUsedForLimit} de ${reportLimit} relatórios gratuitos usados`}
+              </span>
               <span>{Math.round(reportUsagePercent)}%</span>
             </div>
             <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -347,7 +361,9 @@ export function Relatorios() {
           <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl px-4 py-3">
             <span className="flex items-center gap-2">
               <Lock className="w-4 h-4 flex-shrink-0" />
-              Você atingiu o limite de {reportLimit} relatórios neste mês do plano {planLabel}. Faça upgrade para gerar mais.
+              {hasActiveSubscription
+                ? `Você atingiu o limite de ${reportLimit} relatórios neste mês do plano ${planLabel}. Faça upgrade para gerar mais.`
+                : `Você usou seus ${reportLimit} relatórios gratuitos. Assine um plano para continuar gerando relatórios.`}
             </span>
             <a href="/configuracoes" className="font-medium underline whitespace-nowrap">Fazer upgrade</a>
           </div>
@@ -362,7 +378,7 @@ export function Relatorios() {
             <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center mb-4">
               <FileText size={28} className="text-green-500" />
             </div>
-            <h3 className="font-bold text-gray-700 text-lg mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Nenhum relatório ainda</h3>
+            <h3 className="font-serif font-semibold text-gray-700 text-lg mb-1">Nenhum relatório ainda</h3>
             <p className="text-sm text-gray-400 mb-6 max-w-xs">Crie seu primeiro relatório clínico com IA em menos de 2 minutos.</p>
             <button onClick={novoRelatorio} className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-400 transition-all">
               <Sparkles size={16} /> Gerar primeiro relatório
@@ -405,14 +421,16 @@ export function Relatorios() {
           />
         )}
 
+        {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
+
         {reportNearLimit && showReportLimitModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-sm w-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg" style={{ fontFamily: 'Fraunces, serif' }}>Quase no limite</h3>
+                <h3 className="font-serif font-semibold text-gray-800 text-lg">Quase no limite</h3>
               </div>
               <p className="text-sm text-gray-500 mb-4">
                 Você já usou {reportsThisMonth.length} de {reportLimit} relatórios ({Math.round(reportUsagePercent)}%) este mês no plano {planLabel}.
