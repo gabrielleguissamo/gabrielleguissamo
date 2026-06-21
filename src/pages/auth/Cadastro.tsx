@@ -72,10 +72,10 @@ export function Cadastro() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <Input label="Nome completo" placeholder="Sua nome" value={form.fullName} onChange={e => set('fullName', e.target.value)} required />
+        <Input label="Nome completo" placeholder="Seu nome" value={form.fullName} onChange={e => set('fullName', e.target.value)} required />
         <Input label="E-mail" type="email" placeholder="seu@email.com" value={form.email} onChange={e => set('email', e.target.value)} required />
         <div className="relative">
-          <Input label="Senha (én. 8 caracteres)" type={showPwd ? 'text' : 'password'} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => set('password', e.target.value)} minLength={8} required />
+          <Input label="Senha (mín. 8 caracteres)" type={showPwd ? 'text' : 'password'} placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => set('password', e.target.value)} minLength={8} required />
           <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-9 text-ink-4">
             {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -100,7 +100,7 @@ export function Cadastro() {
             <Link to="/termos" target="_blank" className="text-green-600 underline" onClick={e => e.stopPropagation()}>
               Termos de uso
             </Link>{' '}
-            e a{'� '}
+            e a{' '}
             <Link to="/privacidade" target="_blank" className="text-green-600 underline" onClick={e => e.stopPropagation()}>
               Política de privacidade
             </Link>
