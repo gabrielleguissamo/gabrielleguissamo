@@ -6,16 +6,11 @@ import { AuthCard } from '../../components/auth/AuthCard'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 
-const ESTADOS = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-]
-
 export function Cadastro() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     fullName: '', email: '', password: '', confirmPassword: '',
-    crfTo: '', state: '', agreed: false
+    crfTo: '', agreed: false
   })
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -33,7 +28,7 @@ export function Cadastro() {
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { full_name: form.fullName, crf_to: form.crfTo, state: form.state } }
+      options: { data: { full_name: form.fullName, crf_to: form.crfTo } }
     })
     if (error) {
       if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
@@ -82,17 +77,6 @@ export function Cadastro() {
         </div>
         <Input label="Confirmar senha" type="password" placeholder="Repita a senha" value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} required />
         <Input label="CRF/TO (opcional)" placeholder="ex: TO-SP 12345" value={form.crfTo} onChange={e => set('crfTo', e.target.value)} />
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-ink-2">Estado</label>
-          <select
-            className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-ink text-sm outline-none focus:border-green-500 transition-colors"
-            value={form.state}
-            onChange={e => set('state', e.target.value)}
-          >
-            <option value="">Selecione seu estado</option>
-            {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
         <label className="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" checked={form.agreed} onChange={e => set('agreed', e.target.checked)} className="mt-0.5 accent-green-500" />
           <span className="text-sm text-ink-4">
