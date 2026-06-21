@@ -18,6 +18,7 @@ import { ModalEmail } from '../../components/relatorio/ModalEmail'
 import { ModalExcluir } from '../../components/relatorio/ModalExcluir'
 import { UpgradeModal } from '../../components/relatorio/UpgradeModal'
 import { Toast } from '../../components/ui/Toast'
+import ReactMarkdown from 'react-markdown'
 
 interface DadosWizard {
   paciente?: { id: string; name: string; email: string }
@@ -115,8 +116,10 @@ export function Relatorios() {
     setGerando(true)
     setErro('')
     try {
+      const pacienteCompleto = patients.find(p => p.id === paciente.id)
       const conteudo = await gerarRelatorio({
         nomePaciente: paciente.name,
+        dataNascimento: pacienteCompleto?.birth_date ? formatarData(pacienteCompleto.birth_date) : undefined,
         tipoRelatorio: tipo,
         financiamento,
         cidPrincipal,
@@ -239,8 +242,21 @@ export function Relatorios() {
 
   async function handleDownload(rel: RelatorioGerado) {
     ensureVisualizando(rel)
-    const nomeArquivo = `relatorio_${rel.patient_name.replace(/\s+/g, '_')}_${rel.data_geracao.replace(/\//g, '-')}.pdf`
-    await gerarPDF({ elementId: 'relatorio-preview', nomeArquivo, brandColors, nomeTerapeuta, crfto })
+    const nomeArquivo = `relatorio_${rel.patient_name.replace(/\s+/g, '_')}_${rel.data_geracao.replace(/\//g, '-')}`
+    await gerarPDF({
+      nomeArquivo,
+      conteudo: rel.conteudo,
+      nomePaciente: rel.patient_name,
+      nomeTerapeuta,
+      crfto,
+      cidPrincipal: rel.cid_principal,
+      financiamento: rel.financiamento,
+      tuss: rel.tuss,
+      periodoInicio: rel.periodo_inicio,
+      periodoFim: rel.periodo_fim,
+      tipoRelatorio: rel.tipo,
+      brandColors,
+    })
   }
 
   async function handleEnviarEmail(rel: RelatorioGerado, dados: { para: string; cc: string; assunto: string; mensagem: string }) {
@@ -248,7 +264,21 @@ export function Relatorios() {
     setEnviandoEmail(true)
     try {
       const nomeArquivo = `relatorio_${rel.patient_name.replace(/\s+/g, '_')}_${rel.data_geracao.replace(/\//g, '-')}`
-      const pdfBase64 = await gerarPDF({ elementId: 'relatorio-preview', nomeArquivo, brandColors, nomeTerapeuta, crfto, output: 'base64' })
+      const pdfBase64 = await gerarPDF({
+        nomeArquivo,
+        conteudo: rel.conteudo,
+        nomePaciente: rel.patient_name,
+        nomeTerapeuta,
+        crfto,
+        cidPrincipal: rel.cid_principal,
+        financiamento: rel.financiamento,
+        tuss: rel.tuss,
+        periodoInicio: rel.periodo_inicio,
+        periodoFim: rel.periodo_fim,
+        tipoRelatorio: rel.tipo,
+        brandColors,
+        output: 'base64',
+      })
       const { error } = await supabase.functions.invoke('send-report-email', {
         body: { to: dados.para, cc: dados.cc || undefined, subject: dados.assunto, message: dados.mensagem, pdfBase64, filename: `${nomeArquivo}.pdf` },
       })
@@ -581,7 +611,9 @@ export function Relatorios() {
             <h3 className="font-bold text-blue-800 text-sm">Resumo para a Família</h3>
             <button onClick={() => setMostrarResumo(false)} className="text-blue-400 hover:text-blue-600"><X size={16} /></button>
           </div>
-          <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-wrap">{resumoFamiliar}</p>
+          <div className="text-sm text-blue-700 leading-relaxed [&_h2]:font-bold [&_h2]:text-blue-800 [&_h2]:text-base [&_h2]:mt-4 [&_h2]:mb-1 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ml-5 [&_p]:mb-2">
+            <ReactMarkdown>{resumoFamiliar}</ReactMarkdown>
+          </div>
           <button
             onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(resumoFamiliar)}`, '_blank')}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full text-xs font-bold hover:bg-green-400"
