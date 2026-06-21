@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react'
+import { useId, type InputHTMLAttributes } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -6,7 +6,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   success?: boolean
 }
 
-export function Input({ label, error, success, className = '', ...props }: InputProps) {
+export function Input({ label, error, success, className = '', id, ...props }: InputProps) {
+  const generatedId = useId()
+  const inputId = id ?? generatedId
   const borderClass = error
     ? 'border-red-400 focus:border-red-500'
     : success
@@ -15,8 +17,9 @@ export function Input({ label, error, success, className = '', ...props }: Input
 
   return (
     <div className="flex flex-col gap-1">
-      {label && <label className="text-sm font-medium text-ink-2">{label}</label>}
+      {label && <label htmlFor={inputId} className="text-sm font-medium text-ink-2">{label}</label>}
       <input
+        id={inputId}
         className={`h-12 px-4 rounded-xl border bg-white text-ink text-sm outline-none transition-colors ${borderClass} ${className}`}
         {...props}
       />
