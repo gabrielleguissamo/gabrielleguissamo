@@ -608,7 +608,10 @@ export function Relatorios() {
       {mostrarResumo && resumoFamiliar && (
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-blue-800 text-sm">Resumo para a Família</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-blue-800 text-sm">Resumo para a Família</h3>
+              <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">✨ Gerado por IA — revise antes de enviar</span>
+            </div>
             <button onClick={() => setMostrarResumo(false)} className="text-blue-400 hover:text-blue-600"><X size={16} /></button>
           </div>
           <div className="text-sm text-blue-700 leading-relaxed [&_h2]:font-bold [&_h2]:text-blue-800 [&_h2]:text-base [&_h2]:mt-4 [&_h2]:mb-1 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ml-5 [&_p]:mb-2">
