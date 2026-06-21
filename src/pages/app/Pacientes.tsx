@@ -312,8 +312,9 @@ export function Pacientes() {
                 </p>
               )}
               <div>
-                <label className="text-sm font-medium text-ink-2 block mb-1">Status</label>
+                <label htmlFor="patient-status" className="text-sm font-medium text-ink-2 block mb-1">Status</label>
                 <select
+                  id="patient-status"
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
                   value={form.status}
                   onChange={e => setForm(f => ({ ...f, status: e.target.value as Patient['status'] }))}
