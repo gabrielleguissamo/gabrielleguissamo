@@ -178,6 +178,35 @@ function secoesEncaminhamento() {
 11. CONCLUSÃO`
 }
 
+export async function gerarResumoPaciente(params: {
+  nomePaciente: string
+  diagnostico?: string
+  registros: { data: string; tipo: string; conteudo: string }[]
+}): Promise<string> {
+  const system = `Você é terapeuta ocupacional experiente, sintetizando o histórico clínico de um paciente para consulta rápida do próprio terapeuta antes de uma sessão.`
+
+  const historico = params.registros
+    .slice(0, 20)
+    .map(r => `[${r.data} — ${r.tipo}] ${r.conteudo}`)
+    .join('\n\n')
+
+  const user = `Paciente: ${params.nomePaciente}
+${params.diagnostico ? `Diagnóstico: ${params.diagnostico}` : ''}
+
+HISTÓRICO DE REGISTROS (evoluções, avaliações, anamnese):
+${historico || 'Nenhum registro encontrado ainda.'}
+
+Gere um resumo objetivo (máx. 200 palavras) com:
+- Quadro geral do paciente
+- Principais avanços observados
+- Pontos de atenção atuais
+- Sugestão de foco para a próxima sessão
+
+Português brasileiro, direto, sem placeholders. Se não houver histórico suficiente, diga isso claramente em vez de inventar.`
+
+  return callAI(system, user, 600)
+}
+
 export function traduzirErroAPI(erro: Error): string {
   const m = erro.message.toLowerCase()
   if (m.includes('401') || m.includes('invalid x-api-key')) return 'Chave da API inválida. Verifique as configurações no Supabase.'
