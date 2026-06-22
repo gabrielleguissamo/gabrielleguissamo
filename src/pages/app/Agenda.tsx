@@ -60,6 +60,7 @@ export function Agenda() {
   const [form, setForm] = useState({
     patient_id: '', date: '', time: '', duration: '60',
     type: 'presencial' as AppSession['type'], notes: '', value: '',
+    recorrente: false, frequencia: 'semanal' as 'semanal' | 'quinzenal', repeticoes: '8',
   })
 
   async function fetchSessions() {
@@ -100,53 +101,78 @@ export function Agenda() {
     window.location.href = getGoogleCalendarAuthUrl(redirectUri)
   }
 
+  function gerarDatasRecorrencia(): string[] {
+    if (!form.recorrente) return [form.date]
+    const step = form.frequencia === 'quinzenal' ? 14 : 7
+    const n = Math.min(Math.max(parseInt(form.repeticoes) || 1, 1), 52)
+    const base = new Date(form.date + 'T00:00:00')
+    const datas: string[] = []
+    for (let i = 0; i < n; i++) {
+      const d = new Date(base)
+      d.setDate(d.getDate() + i * step)
+      datas.push(toISO(d))
+    }
+    return datas
+  }
+
   async function handleSave() {
     if (!user || !form.patient_id || !form.date || !form.time) return
     setSaving(true)
 
-    const { data: inserted, error } = await supabase.from('sessions').insert({
+    const datas = gerarDatasRecorrencia()
+    const rows = datas.map(date => ({
       user_id: user.id,
       patient_id: form.patient_id,
-      date: form.date,
+      date,
       time: form.time,
       duration: parseInt(form.duration) as AppSession['duration'],
       type: form.type,
-      status: 'pendente',
+      status: 'pendente' as const,
       notes: form.notes || null,
       value: form.value ? parseFloat(form.value) : null,
-    }).select('id').single()
+    }))
 
-    if (error) {
+    const { data: inserted, error } = await supabase.from('sessions').insert(rows).select('id, date, time')
+
+    if (error || !inserted) {
       setSaving(false)
       setToast({ message: 'Erro ao salvar sessão', type: 'error' })
       return
     }
 
-    // Sync to Google Calendar if connected
-    if (googleConnected && inserted) {
-      try {
-        const patient = patients.find(p => p.id === form.patient_id)
-        const googleEventId = await createGoogleCalendarEvent({
-          title: patient?.name ?? 'Paciente',
-          date: form.date,
-          time: form.time,
-          duration: parseInt(form.duration),
-          description: form.notes || undefined,
-          type: form.type,
-        })
-        // Store google_event_id in the session record
-        await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', inserted.id)
-        setToast({ message: 'Sessão salva e adicionada ao Google Agenda!', type: 'success' })
-      } catch {
-        setToast({ message: 'Sessão salva! (Erro ao sincronizar Google Agenda)', type: 'success' })
+    // Sync to Google Calendar if connected (melhor esforço, uma por ocorrência)
+    let syncErrors = 0
+    if (googleConnected) {
+      const patient = patients.find(p => p.id === form.patient_id)
+      for (const row of inserted) {
+        try {
+          const googleEventId = await createGoogleCalendarEvent({
+            title: patient?.name ?? 'Paciente',
+            date: row.date,
+            time: row.time,
+            duration: parseInt(form.duration),
+            description: form.notes || undefined,
+            type: form.type,
+          })
+          await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', row.id)
+        } catch {
+          syncErrors++
+        }
       }
+    }
+
+    const label = inserted.length > 1 ? `${inserted.length} sessões recorrentes criadas!` : 'Sessão salva!'
+    if (googleConnected && syncErrors === 0) {
+      setToast({ message: `${label} Sincronizado com o Google Agenda.`, type: 'success' })
+    } else if (googleConnected && syncErrors > 0) {
+      setToast({ message: `${label} (${syncErrors} não sincronizaram com o Google Agenda)`, type: 'success' })
     } else {
-      setToast({ message: 'Sessão salva!', type: 'success' })
+      setToast({ message: label, type: 'success' })
     }
 
     setSaving(false)
     setShowModal(false)
-    setForm({ patient_id: '', date: '', time: '', duration: '60', type: 'presencial', notes: '', value: '' })
+    setForm({ patient_id: '', date: '', time: '', duration: '60', type: 'presencial', notes: '', value: '', recorrente: false, frequencia: 'semanal', repeticoes: '8' })
     fetchSessions()
   }
 
@@ -377,7 +403,7 @@ export function Agenda() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium text-ink-2 block mb-1">Data</label>
+                  <label className="text-sm font-medium text-ink-2 block mb-1">{form.recorrente ? 'Data de início' : 'Data'}</label>
                   <input
                     type="date"
                     className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
@@ -394,6 +420,43 @@ export function Agenda() {
                     onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
                   />
                 </div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-xl space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.recorrente}
+                    onChange={e => setForm(f => ({ ...f, recorrente: e.target.checked }))}
+                    className="accent-green-500"
+                  />
+                  <span className="text-sm font-medium text-ink-2">Sessão recorrente?</span>
+                </label>
+                {form.recorrente && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-xs font-medium text-ink-4 block mb-1">Frequência</label>
+                      <select
+                        className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-green-500"
+                        value={form.frequencia}
+                        onChange={e => setForm(f => ({ ...f, frequencia: e.target.value as 'semanal' | 'quinzenal' }))}
+                      >
+                        <option value="semanal">Semanal</option>
+                        <option value="quinzenal">Quinzenal</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-ink-4 block mb-1">Repetir por (semanas)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={52}
+                        className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-green-500"
+                        value={form.repeticoes}
+                        onChange={e => setForm(f => ({ ...f, repeticoes: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium text-ink-2 block mb-1">Duração</label>
