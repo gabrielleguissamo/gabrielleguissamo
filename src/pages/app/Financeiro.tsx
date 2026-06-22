@@ -77,13 +77,20 @@ export function Financeiro() {
 
   async function fetchConfirmedSessions() {
     if (!user) return
-    const { count } = await supabase
+    // 'date' e coluna nativa do Postgres: `${selectedMonth}-32` lanca erro de parsing
+    // (dia 32 invalido) e fazia a consulta falhar silenciosamente, travando o contador em 0.
+    const [ano, mes] = selectedMonth.split('-').map(Number)
+    const inicioMesSeguinte = mes === 12 ? `${ano + 1}-01-01` : `${ano}-${String(mes + 1).padStart(2, '0')}-01`
+    const { count, error } = await supabase
       .from('sessions')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('status', 'confirmado')
       .gte('date', `${selectedMonth}-01`)
-      .lt('date', `${selectedMonth}-32`)
+      .lt('date', inicioMesSeguinte)
+    if (error) {
+      console.error('Erro ao buscar sessões confirmadas:', error)
+    }
     setConfirmedSessions(count ?? 0)
   }
 
