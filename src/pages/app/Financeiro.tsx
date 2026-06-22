@@ -46,6 +46,7 @@ export function Financeiro() {
   const [form, setForm] = useState({
     patient_id: '', date: '', amount: '', type: 'sessao' as Transaction['type'],
     payment_method: 'PIX', status: 'pendente' as Transaction['status'],
+    mensesRepetir: '1',
   })
 
   async function fetchTransactions() {
@@ -92,22 +93,32 @@ export function Financeiro() {
   async function handleSave() {
     if (!user || !form.date || !form.amount || parseFloat(form.amount) <= 0) return
     setSaving(true)
-    const { error } = await supabase.from('transactions').insert({
-      user_id: user.id,
-      patient_id: form.patient_id || null,
-      date: form.date,
-      amount: parseFloat(form.amount),
-      type: form.type,
-      payment_method: form.payment_method,
-      status: form.status,
+
+    const n = form.type === 'mensalidade' ? Math.min(Math.max(parseInt(form.mensesRepetir) || 1, 1), 24) : 1
+    const baseDate = new Date(form.date + 'T00:00:00')
+    const rows = Array.from({ length: n }, (_, i) => {
+      const d = new Date(baseDate)
+      d.setMonth(d.getMonth() + i)
+      const pad = (v: number) => String(v).padStart(2, '0')
+      return {
+        user_id: user.id,
+        patient_id: form.patient_id || null,
+        date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+        amount: parseFloat(form.amount),
+        type: form.type,
+        payment_method: form.payment_method,
+        status: i === 0 ? form.status : 'pendente',
+      }
     })
+
+    const { error } = await supabase.from('transactions').insert(rows)
     setSaving(false)
     if (error) {
       setToast({ message: 'Erro ao salvar lançamento', type: 'error' })
     } else {
-      setToast({ message: 'Lançamento salvo!', type: 'success' })
+      setToast({ message: n > 1 ? `${n} mensalidades geradas!` : 'Lançamento salvo!', type: 'success' })
       setShowModal(false)
-      setForm({ patient_id: '', date: '', amount: '', type: 'sessao', payment_method: 'PIX', status: 'pendente' })
+      setForm({ patient_id: '', date: '', amount: '', type: 'sessao', payment_method: 'PIX', status: 'pendente', mensesRepetir: '1' })
       fetchTransactions()
     }
   }
@@ -276,8 +287,23 @@ export function Financeiro() {
                   <option value="sessao">Sessão</option>
                   <option value="avaliacao">Avaliação</option>
                   <option value="material">Material</option>
+                  <option value="mensalidade">Mensalidade</option>
                 </select>
               </div>
+              {form.type === 'mensalidade' && (
+                <div>
+                  <label className="text-sm font-medium text-ink-2 block mb-1">Repetir por quantos meses</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={24}
+                    className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
+                    value={form.mensesRepetir}
+                    onChange={e => setForm(f => ({ ...f, mensesRepetir: e.target.value }))}
+                  />
+                  <p className="text-xs text-ink-5 mt-1">Gera um lançamento por mês, na mesma data, a partir da data informada.</p>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium text-ink-2 block mb-1">Forma de pagamento</label>
                 <select
