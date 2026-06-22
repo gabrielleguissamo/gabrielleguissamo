@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, Users, FileText,
-  DollarSign, BarChart2, Settings, LogOut, X, ShieldCheck
+  DollarSign, BarChart2, Settings, LogOut, X, ShieldCheck, Bell
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { ADMIN_EMAIL } from '../../lib/adminConfig'
@@ -9,6 +9,7 @@ import { ADMIN_EMAIL } from '../../lib/adminConfig'
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/agenda', icon: Calendar, label: 'Agenda' },
+  { to: '/avisos', icon: Bell, label: 'Avisos' },
   { to: '/pacientes', icon: Users, label: 'Pacientes' },
   { to: '/prontuarios', icon: FileText, label: 'Prontuários' },
   { to: '/financeiro', icon: DollarSign, label: 'Financeiro' },
