@@ -149,7 +149,7 @@ export function Agenda() {
           const googleEventId = await createGoogleCalendarEvent({
             title: patient?.name ?? 'Paciente',
             date: row.date,
-            time: row.time,
+            time: form.time,
             duration: parseInt(form.duration),
             description: form.notes || undefined,
             type: form.type,
@@ -264,7 +264,7 @@ export function Agenda() {
             const googleEventId = await createGoogleCalendarEvent({
               title: patient?.name ?? session.patients?.name ?? 'Paciente',
               date: session.date,
-              time: session.time,
+              time: session.time.slice(0, 5),
               duration: session.duration,
               description: session.notes ?? undefined,
               type: session.type,
