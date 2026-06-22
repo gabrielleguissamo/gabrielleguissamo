@@ -458,15 +458,6 @@ export function Relatorios() {
 
         {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
 
-        {showSignaturePad && (
-          <SignaturePad
-            nomeTerapeuta={nomeTerapeuta}
-            onConfirm={dataUrl => { setAssinaturaUrl(dataUrl); setShowSignaturePad(false) }}
-            onSkip={() => { setAssinaturaUrl(undefined); setShowSignaturePad(false) }}
-            onClose={() => setShowSignaturePad(false)}
-          />
-        )}
-
         {reportNearLimit && showReportLimitModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-sm w-full">
@@ -656,6 +647,15 @@ export function Relatorios() {
         </button>
         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
       </div>
+
+        {showSignaturePad && (
+          <SignaturePad
+            nomeTerapeuta={nomeTerapeuta}
+            onConfirm={dataUrl => { setAssinaturaUrl(dataUrl); setShowSignaturePad(false) }}
+            onSkip={() => { setAssinaturaUrl(undefined); setShowSignaturePad(false) }}
+            onClose={() => setShowSignaturePad(false)}
+          />
+        )}
 
       {modalEmail && relatorioAtual && (
         <ModalEmail
