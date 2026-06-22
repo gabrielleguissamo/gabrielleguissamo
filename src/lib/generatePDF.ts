@@ -15,6 +15,7 @@ interface PDFOptions {
   tipoRelatorio?: string
   brandColors?: { primary: string; secondary?: string; light?: string }
   output?: 'save' | 'base64'
+  assinaturaUrl?: string
 }
 
 const TIPO_SUBTITULO: Record<string, string> = {
@@ -74,6 +75,7 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
     tipoRelatorio,
     brandColors = { primary: '#2d7a3a' },
     output = 'save',
+    assinaturaUrl,
   } = opts
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true })
@@ -278,12 +280,16 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
   }
 
   // Assinatura
-  addPageIfNeeded(30)
+  addPageIfNeeded(38)
   y += 6
   pdf.setDrawColor(pr, pg, pb)
   pdf.setLineWidth(0.6)
   pdf.line(marginH, y, pageWidth - marginH, y)
   y += 10
+  if (assinaturaUrl) {
+    pdf.addImage(assinaturaUrl, 'PNG', marginH, y, 50, 16)
+    y += 18
+  }
   pdf.setDrawColor(150, 150, 150)
   pdf.setLineWidth(0.2)
   pdf.line(marginH, y, marginH + 56, y)
