@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock } from 'lucide-react'
+import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock, PenLine } from 'lucide-react'
 import { PLAN_LIMITS, FREE_REPORT_LIMIT } from '../../lib/planLimits'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -17,6 +17,7 @@ import { RelatorioCard } from '../../components/relatorio/RelatorioCard'
 import { ModalEmail } from '../../components/relatorio/ModalEmail'
 import { ModalExcluir } from '../../components/relatorio/ModalExcluir'
 import { UpgradeModal } from '../../components/relatorio/UpgradeModal'
+import { SignaturePad } from '../../components/ui/SignaturePad'
 import { Toast } from '../../components/ui/Toast'
 import ReactMarkdown from 'react-markdown'
 
@@ -67,6 +68,8 @@ export function Relatorios() {
   const [visibleCount, setVisibleCount] = useState(12)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [enviandoEmail, setEnviandoEmail] = useState(false)
+  const [assinaturaUrl, setAssinaturaUrl] = useState<string | undefined>()
+  const [showSignaturePad, setShowSignaturePad] = useState(false)
 
   async function fetchRelatorios() {
     if (!user) return
@@ -256,6 +259,7 @@ export function Relatorios() {
       periodoFim: rel.periodo_fim,
       tipoRelatorio: rel.tipo,
       brandColors,
+      assinaturaUrl,
     })
   }
 
@@ -277,6 +281,7 @@ export function Relatorios() {
         periodoFim: rel.periodo_fim,
         tipoRelatorio: rel.tipo,
         brandColors,
+        assinaturaUrl,
         output: 'base64',
       })
       const { error } = await supabase.functions.invoke('send-report-email', {
@@ -453,6 +458,15 @@ export function Relatorios() {
 
         {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
 
+        {showSignaturePad && (
+          <SignaturePad
+            nomeTerapeuta={nomeTerapeuta}
+            onConfirm={dataUrl => { setAssinaturaUrl(dataUrl); setShowSignaturePad(false) }}
+            onSkip={() => { setAssinaturaUrl(undefined); setShowSignaturePad(false) }}
+            onClose={() => setShowSignaturePad(false)}
+          />
+        )}
+
         {reportNearLimit && showReportLimitModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-sm w-full">
@@ -551,6 +565,12 @@ export function Relatorios() {
                   ? <div className="w-3 h-3 border border-green-500 border-t-transparent rounded-full animate-spin" />
                   : <Sparkles size={13} />}
                 Resumo familiar
+              </button>
+              <button
+                onClick={() => setShowSignaturePad(true)}
+                className={`flex items-center gap-1.5 px-4 py-2 border rounded-full text-xs font-semibold ${assinaturaUrl ? 'border-green-200 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              >
+                <PenLine size={13} /> {assinaturaUrl ? 'Assinado' : 'Assinatura'}
               </button>
               <button
                 onClick={() => relatorioAtual && setModalEmail(relatorioAtual)}
