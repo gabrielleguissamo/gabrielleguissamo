@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, X, Upload, Download, Trash2, FileText, Calendar, DollarSign, ClipboardList } from 'lucide-react'
+import { Search, Plus, X, Upload, Download, Trash2, FileText, Calendar, DollarSign, ClipboardList, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Toast } from '../../components/ui/Toast'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { gerarResumoPaciente, traduzirErroAPI } from '../../lib/anthropic'
 import type { Patient, MedicalRecord, PatientDocument, AppSession, Transaction } from '../../types'
+
+const ANAMNESE_MODELO = `Contato de emergência: 
+Queixa inicial: 
+Tempo do sintoma: 
+Atividade física: 
+Tabagismo: 
+Alimentação: 
+Uso de álcool: 
+Histórico familiar: 
+Medicação contínua: 
+Outras observações: `
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -40,7 +53,32 @@ export function Prontuarios() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // Form state
-  const [form, setForm] = useState({ date: '', session_type: 'Presencial', content: '', record_type: 'evolucao' as 'evolucao' | 'avaliacao' })
+  const [form, setForm] = useState({ date: '', session_type: 'Presencial', content: '', record_type: 'evolucao' as 'evolucao' | 'avaliacao' | 'anamnese' })
+  const [resumoPaciente, setResumoPaciente] = useState('')
+  const [gerandoResumo, setGerandoResumo] = useState(false)
+  const [showResumo, setShowResumo] = useState(false)
+
+  async function handleResumirPaciente() {
+    if (!selected) return
+    setGerandoResumo(true)
+    setShowResumo(true)
+    try {
+      const resumo = await gerarResumoPaciente({
+        nomePaciente: selected.name,
+        diagnostico: selected.diagnosis,
+        registros: records.map(r => ({
+          data: formatDate(r.date),
+          tipo: r.record_type === 'avaliacao' ? 'Avaliação' : r.record_type === 'anamnese' ? 'Anamnese' : 'Evolução',
+          conteudo: r.content,
+        })),
+      })
+      setResumoPaciente(resumo)
+    } catch (err) {
+      setResumoPaciente(traduzirErroAPI(err as Error))
+    } finally {
+      setGerandoResumo(false)
+    }
+  }
 
   async function fetchPatients() {
     if (!user) return
@@ -243,7 +281,16 @@ export function Prontuarios() {
               <div className="p-5 border-b">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-serif text-xl font-semibold text-ink">{selected.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-serif text-xl font-semibold text-ink">{selected.name}</h2>
+                      <button
+                        onClick={handleResumirPaciente}
+                        disabled={gerandoResumo}
+                        className="flex items-center gap-1 px-2.5 py-1 border border-green-200 bg-green-50 text-green-700 rounded-full text-xs font-semibold hover:bg-green-100 disabled:opacity-50"
+                      >
+                        <Sparkles size={11} /> Resumir paciente
+                      </button>
+                    </div>
                     <p className="text-sm text-ink-4">{selected.diagnosis ?? '—'}</p>
                   </div>
                   {activeTab === 'documentos' ? (
@@ -261,13 +308,30 @@ export function Prontuarios() {
                       <Upload className="w-4 h-4" /> {uploading ? 'Enviando...' : 'Enviar documento'}
                     </label>
                   ) : activeTab === 'historico' ? null : (
-                    <Button onClick={() => { setForm(f => ({ ...f, record_type: activeTab === 'avaliacoes' ? 'avaliacao' : 'evolucao' })); setShowModal(true) }}>
-                      <Plus className="w-4 h-4" /> {activeTab === 'avaliacoes' ? 'Nova avaliação' : 'Nova evolução'}
+                    <Button onClick={() => { setForm(f => ({ ...f, record_type: activeTab === 'avaliacoes' ? 'avaliacao' : activeTab === 'anamnese' ? 'anamnese' : 'evolucao', content: activeTab === 'anamnese' ? ANAMNESE_MODELO : '' })); setShowModal(true) }}>
+                      <Plus className="w-4 h-4" /> {activeTab === 'avaliacoes' ? 'Nova avaliação' : activeTab === 'anamnese' ? 'Nova anamnese' : 'Nova evolução'}
                     </Button>
                   )}
                 </div>
+                {showResumo && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-100 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-bold text-green-800 flex items-center gap-1"><Sparkles size={12} /> Resumo do paciente</p>
+                      <button onClick={() => setShowResumo(false)} className="text-green-400 hover:text-green-600"><X size={14} /></button>
+                    </div>
+                    {gerandoResumo ? (
+                      <div className="flex items-center gap-2 text-sm text-green-700">
+                        <div className="w-3 h-3 border border-green-500 border-t-transparent rounded-full animate-spin" /> Gerando resumo...
+                      </div>
+                    ) : (
+                      <div className="text-sm text-green-800 leading-relaxed [&_strong]:font-semibold">
+                        <ReactMarkdown>{resumoPaciente}</ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-1 mt-4">
-                  {[['evolucao', 'Evolução'], ['avaliacoes', 'Avaliações'], ['documentos', 'Documentos'], ['historico', 'Histórico']].map(([k, l]) => (
+                  {[['evolucao', 'Evolução'], ['avaliacoes', 'Avaliações'], ['anamnese', 'Anamnese'], ['documentos', 'Documentos'], ['historico', 'Histórico']].map(([k, l]) => (
                     <button
                       key={k}
                       onClick={() => setActiveTab(k)}
@@ -280,18 +344,20 @@ export function Prontuarios() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-5">
-                {(activeTab === 'evolucao' || activeTab === 'avaliacoes') && (
+                {(activeTab === 'evolucao' || activeTab === 'avaliacoes' || activeTab === 'anamnese') && (
                   loadingRecords ? (
                     <div className="flex items-center justify-center h-40">
                       <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                   ) : (() => {
-                    const filteredRecords = records.filter(r =>
-                      activeTab === 'avaliacoes' ? r.record_type === 'avaliacao' : (r.record_type ?? 'evolucao') !== 'avaliacao'
-                    )
+                    const filteredRecords = records.filter(r => {
+                      if (activeTab === 'avaliacoes') return r.record_type === 'avaliacao'
+                      if (activeTab === 'anamnese') return r.record_type === 'anamnese'
+                      return (r.record_type ?? 'evolucao') === 'evolucao'
+                    })
                     return filteredRecords.length === 0 ? (
                       <div className="flex items-center justify-center h-40 text-ink-5 text-sm">
-                        {activeTab === 'avaliacoes' ? 'Nenhuma avaliação registrada ainda.' : 'Nenhuma evolução registrada ainda.'}
+                        {activeTab === 'avaliacoes' ? 'Nenhuma avaliação registrada ainda.' : activeTab === 'anamnese' ? 'Nenhuma anamnese registrada ainda.' : 'Nenhuma evolução registrada ainda.'}
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -367,7 +433,7 @@ export function Prontuarios() {
                         date: r.date,
                         key: `record-${r.id}`,
                         icon: ClipboardList,
-                        label: r.record_type === 'avaliacao' ? 'Avaliação' : 'Evolução',
+                        label: r.record_type === 'avaliacao' ? 'Avaliação' : r.record_type === 'anamnese' ? 'Anamnese' : 'Evolução',
                         detail: r.content,
                         color: 'text-purple-500',
                       })),
@@ -409,7 +475,7 @@ export function Prontuarios() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
           <Card className="w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 id="record-modal-title" className="font-serif text-lg font-semibold">{form.record_type === 'avaliacao' ? 'Nova avaliação' : 'Nova evolução'}</h3>
+              <h3 id="record-modal-title" className="font-serif text-lg font-semibold">{form.record_type === 'avaliacao' ? 'Nova avaliação' : form.record_type === 'anamnese' ? 'Nova anamnese' : 'Nova evolução'}</h3>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-ink-4" /></button>
             </div>
             <div className="space-y-3">
@@ -439,17 +505,23 @@ export function Prontuarios() {
                 <select
                   className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
                   value={form.record_type}
-                  onChange={e => setForm(f => ({ ...f, record_type: e.target.value as 'evolucao' | 'avaliacao' }))}
+                  onChange={e => setForm(f => ({ ...f, record_type: e.target.value as 'evolucao' | 'avaliacao' | 'anamnese' }))}
                 >
                   <option value="evolucao">Evolução</option>
                   <option value="avaliacao">Avaliação</option>
+                  <option value="anamnese">Anamnese</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-ink-2 block mb-1">{form.record_type === 'avaliacao' ? 'Avaliação' : 'Evolução'}</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium text-ink-2">{form.record_type === 'avaliacao' ? 'Avaliação' : form.record_type === 'anamnese' ? 'Anamnese' : 'Evolução'}</label>
+                  {form.record_type === 'anamnese' && (
+                    <button type="button" onClick={() => setForm(f => ({ ...f, content: ANAMNESE_MODELO }))} className="text-xs text-green-600 hover:underline">Usar modelo</button>
+                  )}
+                </div>
                 <textarea
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500 resize-none h-32"
-                  placeholder={form.record_type === 'avaliacao' ? 'Descreva a avaliação do paciente...' : 'Descreva a evolução do paciente nesta sessão...'}
+                  placeholder={form.record_type === 'avaliacao' ? 'Descreva a avaliação do paciente...' : form.record_type === 'anamnese' ? 'Preencha o roteiro de anamnese...' : 'Descreva a evolução do paciente nesta sessão...'}
                   value={form.content}
                   onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                 />
@@ -457,7 +529,7 @@ export function Prontuarios() {
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" fullWidth onClick={() => setShowModal(false)}>Cancelar</Button>
                 <Button fullWidth onClick={handleSaveRecord} disabled={saving || !form.content}>
-                  {saving ? 'Salvando...' : form.record_type === 'avaliacao' ? 'Salvar avaliação' : 'Salvar evolução'}
+                  {saving ? 'Salvando...' : form.record_type === 'avaliacao' ? 'Salvar avaliação' : form.record_type === 'anamnese' ? 'Salvar anamnese' : 'Salvar evolução'}
                 </Button>
               </div>
             </div>
