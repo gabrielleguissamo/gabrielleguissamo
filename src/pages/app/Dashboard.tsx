@@ -64,7 +64,7 @@ export function Dashboard() {
 
     async function loadDashboard() {
       setLoading(true)
-
+      try {
       const today = toISO(new Date())
       const { start: weekStart, end: weekEnd } = getWeekRange()
       const { start: monthStart, end: monthEnd } = getMonthRange()
@@ -118,23 +118,23 @@ export function Dashboard() {
         .order('time', { ascending: true })
       setTodaySessions((todayData ?? []) as SessionWithPatient[])
 
-      // Weekly chart — last 8 weeks
-      const chartData: { semana: string; sessoes: number }[] = []
-      for (let i = 7; i >= 0; i--) {
+      // Weekly chart — last 8 weeks (consultas em paralelo, nao em serie)
+      const weekOffsets = [7, 6, 5, 4, 3, 2, 1, 0]
+      const chartCounts = await Promise.all(weekOffsets.map(i => {
         const wStart = new Date(weekStart)
         wStart.setDate(wStart.getDate() - i * 7)
         const wEnd = new Date(wStart)
         wEnd.setDate(wStart.getDate() + 6)
-        const { count } = await supabase
+        return supabase
           .from('sessions')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user!.id)
           .gte('date', toISO(wStart))
           .lte('date', toISO(wEnd))
           .neq('status', 'cancelado')
-        chartData.push({ semana: `S${8 - i}`, sessoes: count ?? 0 })
-      }
-      setWeeklyChartData(chartData)
+          .then(({ count }) => count ?? 0)
+      }))
+      setWeeklyChartData(weekOffsets.map((i, idx) => ({ semana: `S${8 - i}`, sessoes: chartCounts[idx] })))
 
       // Pie chart — session types (all time)
       const { data: allSessions } = await supabase
@@ -157,8 +157,11 @@ export function Dashboard() {
       setPieData(pie.length > 0 ? pie : [
         { name: 'Presencial', value: 0 },
       ])
-
-      setLoading(false)
+      } catch (err) {
+        console.error('Erro ao carregar dashboard:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     loadDashboard()
