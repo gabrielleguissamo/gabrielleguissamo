@@ -86,7 +86,7 @@ export interface MedicalRecord {
   date: string
   content: string
   assessment_type?: string
-  record_type?: 'evolucao' | 'avaliacao'
+  record_type?: 'evolucao' | 'avaliacao' | 'anamnese'
   created_at: string
 }
 
@@ -108,7 +108,7 @@ export interface Transaction {
   session_id?: string | null
   date: string
   amount: number
-  type: 'sessao' | 'avaliacao' | 'material'
+  type: 'sessao' | 'avaliacao' | 'material' | 'mensalidade'
   payment_method?: string
   status: 'pago' | 'pendente' | 'cancelado'
   created_at: string
