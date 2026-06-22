@@ -96,10 +96,15 @@ export function Financeiro() {
 
     const n = form.type === 'mensalidade' ? Math.min(Math.max(parseInt(form.mensesRepetir) || 1, 1), 24) : 1
     const baseDate = new Date(form.date + 'T00:00:00')
+    const diaOriginal = baseDate.getDate()
+    const pad = (v: number) => String(v).padStart(2, '0')
     const rows = Array.from({ length: n }, (_, i) => {
-      const d = new Date(baseDate)
-      d.setMonth(d.getMonth() + i)
-      const pad = (v: number) => String(v).padStart(2, '0')
+      // Calcula ano/mes alvo e usa o ultimo dia do mes se o dia original nao existir
+      // (ex: mensalidade no dia 31 de janeiro -> 28/29 de fevereiro, nunca pula para marco).
+      const mesAlvo = baseDate.getMonth() + i
+      const ultimoDiaDoMes = new Date(baseDate.getFullYear(), mesAlvo + 1, 0).getDate()
+      const dia = Math.min(diaOriginal, ultimoDiaDoMes)
+      const d = new Date(baseDate.getFullYear(), mesAlvo, dia)
       return {
         user_id: user.id,
         patient_id: form.patient_id || null,
