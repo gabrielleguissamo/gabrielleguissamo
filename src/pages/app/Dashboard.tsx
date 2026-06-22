@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react'
-import { Users, Calendar, TrendingUp, FileEdit } from 'lucide-react'
+import { Users, Calendar, TrendingUp, FileEdit, Cake, MessageCircle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import type { AppSession } from '../../types'
+
+function telefoneParaWhatsApp(phone?: string): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  if (!digits) return null
+  return digits.startsWith('55') ? digits : `55${digits}`
+}
+
+interface Aniversariante {
+  id: string
+  name: string
+  phone?: string
+  data: Date
+  idade: number
+}
 
 const PIE_COLORS = ['#2d7a3a', '#3d9b4d', '#82c98b', '#b4e0ba']
 
@@ -57,6 +72,7 @@ export function Dashboard() {
   const [todaySessions, setTodaySessions] = useState<SessionWithPatient[]>([])
   const [weeklyChartData, setWeeklyChartData] = useState<{ semana: string; sessoes: number }[]>([])
   const [pieData, setPieData] = useState<{ name: string; value: number }[]>([])
+  const [aniversariantes, setAniversariantes] = useState<Aniversariante[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -157,6 +173,29 @@ export function Dashboard() {
       setPieData(pie.length > 0 ? pie : [
         { name: 'Presencial', value: 0 },
       ])
+
+      // Aniversariantes da semana
+      const { data: patientsData } = await supabase
+        .from('patients')
+        .select('id, name, phone, birth_date')
+        .eq('user_id', user!.id)
+        .eq('status', 'ativo')
+        .not('birth_date', 'is', null)
+      const lista: Aniversariante[] = []
+      ;(patientsData ?? []).forEach((p: { id: string; name: string; phone?: string; birth_date: string }) => {
+        const [by, bm, bd] = p.birth_date.split('-').map(Number)
+        for (let offset = 0; offset <= 6; offset++) {
+          const d = new Date()
+          d.setHours(0, 0, 0, 0)
+          d.setDate(d.getDate() + offset)
+          if (d.getMonth() + 1 === bm && d.getDate() === bd) {
+            lista.push({ id: p.id, name: p.name, phone: p.phone, data: d, idade: d.getFullYear() - by })
+            break
+          }
+        }
+      })
+      lista.sort((a, b) => a.data.getTime() - b.data.getTime())
+      setAniversariantes(lista)
       } catch (err) {
         console.error('Erro ao carregar dashboard:', err)
       } finally {
@@ -219,6 +258,37 @@ export function Dashboard() {
           </ResponsiveContainer>
         </Card>
       </div>
+
+      {!loading && aniversariantes.length > 0 && (
+        <Card className="p-5">
+          <h3 className="font-medium text-ink mb-4 flex items-center gap-2"><Cake className="w-4 h-4 text-pink-500" /> Aniversariantes da semana</h3>
+          <div className="space-y-2">
+            {aniversariantes.map(a => {
+              const tel = telefoneParaWhatsApp(a.phone)
+              const msg = `Olá ${a.name}! 🎉 Passando para desejar um feliz aniversário! Tudo de bom para você.`
+              const isHoje = a.data.toDateString() === new Date().toDateString()
+              return (
+                <div key={a.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-ink">{a.name} <span className="text-ink-5">— {a.idade} anos</span></p>
+                    <p className="text-xs text-ink-5">{isHoje ? 'Hoje' : a.data.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</p>
+                  </div>
+                  {tel && (
+                    <a
+                      href={`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-full text-xs font-semibold hover:bg-green-400"
+                    >
+                      <MessageCircle size={12} /> Parabenizar
+                    </a>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       <Card className="p-5">
         <h3 className="font-medium text-ink mb-4">Agenda de hoje</h3>
