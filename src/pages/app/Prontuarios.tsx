@@ -170,7 +170,8 @@ export function Prontuarios() {
     if (error) {
       setToast({ message: 'Erro ao salvar', type: 'error' })
     } else {
-      setToast({ message: form.record_type === 'avaliacao' ? 'Avaliação salva!' : 'Evolução salva!', type: 'success' })
+      const recordTypeLabel = form.record_type === 'avaliacao' ? 'Avaliação' : form.record_type === 'anamnese' ? 'Anamnese' : 'Evolução'
+      setToast({ message: `${recordTypeLabel} salva!`, type: 'success' })
       setShowModal(false)
       setForm({ date: '', session_type: 'Presencial', content: '', record_type: 'evolucao' })
       if (selected) fetchRecords(selected.id)
