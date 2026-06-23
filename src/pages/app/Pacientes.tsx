@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, X, Trash2, Pencil, Lock } from 'lucide-react'
+import { Plus, Search, Trash2, Pencil, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Input'
 import { Toast } from '../../components/ui/Toast'
@@ -280,12 +281,8 @@ export function Pacientes() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="patient-modal-title">
-          <Card className="w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 id="patient-modal-title" className="font-serif text-lg font-semibold">{editingId ? 'Editar paciente' : 'Novo paciente'}</h3>
-              <button onClick={() => { setShowModal(false); setEditingId(null) }}><X className="w-5 h-5 text-ink-4" /></button>
-            </div>
+        <Modal labelledBy="patient-modal-title" onClose={() => { setShowModal(false); setEditingId(null) }} maxWidth="max-w-lg">
+            <h3 id="patient-modal-title" className="font-serif text-lg font-semibold text-ink mb-4 pr-6">{editingId ? 'Editar paciente' : 'Novo paciente'}</h3>
             <div className="space-y-3">
               <Input label="Nome completo" placeholder="Nome do paciente" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
               <div className="grid grid-cols-2 gap-3">
@@ -331,20 +328,18 @@ export function Pacientes() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>
+        </Modal>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {nearLimit && showLimitModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="limit-modal-title">
-          <Card className="p-6 max-w-sm w-full">
+        <Modal labelledBy="limit-modal-title" onClose={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }} maxWidth="max-w-sm">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
                 <Lock className="w-5 h-5" />
               </div>
-              <h3 id="limit-modal-title" className="font-serif text-lg font-semibold text-ink">Quase no limite</h3>
+              <h3 id="limit-modal-title" className="font-serif text-lg font-semibold text-ink pr-6">Quase no limite</h3>
             </div>
             <p className="text-sm text-ink-4 mb-4">
               Você já usou {patients.length} de {patientLimit} pacientes ({Math.round(usagePercent)}%) do plano {planLabel}.
@@ -354,8 +349,7 @@ export function Pacientes() {
               <Button variant="outline" fullWidth onClick={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }}>Continuar</Button>
               <Button fullWidth onClick={() => { window.location.href = '/configuracoes' }}>Fazer upgrade</Button>
             </div>
-          </Card>
-        </div>
+        </Modal>
       )}
     </div>
   )
