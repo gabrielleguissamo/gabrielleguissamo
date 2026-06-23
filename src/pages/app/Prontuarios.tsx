@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { Toast } from '../../components/ui/Toast'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -473,12 +474,8 @@ export function Prontuarios() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
-          <Card className="w-full max-w-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 id="record-modal-title" className="font-serif text-lg font-semibold">{form.record_type === 'avaliacao' ? 'Nova avaliação' : form.record_type === 'anamnese' ? 'Nova anamnese' : 'Nova evolução'}</h3>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-ink-4" /></button>
-            </div>
+        <Modal labelledBy="record-modal-title" onClose={() => setShowModal(false)} maxWidth="max-w-lg">
+            <h3 id="record-modal-title" className="font-serif text-lg font-semibold text-ink mb-4 pr-6">{form.record_type === 'avaliacao' ? 'Nova avaliação' : form.record_type === 'anamnese' ? 'Nova anamnese' : 'Nova evolução'}</h3>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -534,8 +531,7 @@ export function Prontuarios() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>
+        </Modal>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
