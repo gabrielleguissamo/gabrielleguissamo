@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
-import { X, RotateCcw, Check } from 'lucide-react'
+import { RotateCcw, Check } from 'lucide-react'
+import { Modal } from './Modal'
+import { Button } from './Button'
 
 interface SignaturePadProps {
   nomeTerapeuta: string
@@ -69,14 +71,10 @@ export function SignaturePad({ nomeTerapeuta, onConfirm, onSkip, onClose }: Sign
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-gray-800 text-lg">Assinatura digital</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{nomeTerapeuta} — Terapeuta Ocupacional</p>
-          </div>
-          <button onClick={onClose}><X size={18} className="text-gray-400 hover:text-gray-600" /></button>
+    <Modal onClose={onClose} maxWidth="max-w-lg" className="space-y-4">
+        <div>
+          <h3 className="font-serif text-lg font-semibold text-ink pr-6">Assinatura digital</h3>
+          <p className="text-xs text-ink-4 mt-0.5">{nomeTerapeuta} — Terapeuta Ocupacional</p>
         </div>
 
         <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 overflow-hidden">
@@ -94,30 +92,23 @@ export function SignaturePad({ nomeTerapeuta, onConfirm, onSkip, onClose }: Sign
             onTouchEnd={() => setDrawing(false)}
           />
         </div>
-        <p className="text-xs text-gray-400 text-center -mt-1">Assine com o mouse ou dedo na área acima</p>
+        <p className="text-xs text-ink-4 text-center -mt-1">Assine com o mouse ou dedo na área acima</p>
 
         <div className="flex gap-3">
-          <button
-            onClick={clear}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-gray-50"
-          >
+          <Button variant="outline" onClick={clear} className="!px-4">
             <RotateCcw size={14} /> Limpar
-          </button>
-          <button
-            onClick={onSkip}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm text-gray-500 hover:bg-gray-50"
-          >
+          </Button>
+          <Button variant="ghost" onClick={onSkip} className="!px-4">
             Pular assinatura
-          </button>
-          <button
+          </Button>
+          <Button
+            fullWidth
             onClick={() => onConfirm(canvasRef.current!.toDataURL('image/png'))}
             disabled={!hasDrawn}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check size={14} /> Confirmar e baixar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }
