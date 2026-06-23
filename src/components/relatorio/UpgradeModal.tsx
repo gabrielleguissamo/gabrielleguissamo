@@ -26,8 +26,8 @@ const PLANOS = [
   },
 ]
 
-export function UpgradeModal({ onClose }: { onClose: () => void }) {
-  const { user } = useAuth()
+export function UpgradeModal({ onClose, dismissible = true }: { onClose: () => void; dismissible?: boolean }) {
+  const { user, signOut } = useAuth()
 
   function handleUpgrade(plan: 'inicial' | 'profissional') {
     if (!user) return
@@ -41,9 +41,11 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="max-w-4xl w-full text-center bg-cream rounded-2xl p-6 md:p-10 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-ink-4 hover:text-ink" aria-label="Fechar">
-          <X className="w-5 h-5" />
-        </button>
+        {dismissible && (
+          <button onClick={onClose} className="absolute top-4 right-4 text-ink-4 hover:text-ink" aria-label="Fechar">
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
           <Lock className="w-6 h-6" />
@@ -75,9 +77,15 @@ export function UpgradeModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <button onClick={onClose} className="text-sm text-ink-4 hover:underline mt-8">
-          Continuar sem assinar
-        </button>
+        {dismissible ? (
+          <button onClick={onClose} className="text-sm text-ink-4 hover:underline mt-8">
+            Continuar sem assinar
+          </button>
+        ) : (
+          <button onClick={signOut} className="text-sm text-ink-4 hover:underline mt-8">
+            Sair da conta
+          </button>
+        )}
       </div>
     </div>
   )
