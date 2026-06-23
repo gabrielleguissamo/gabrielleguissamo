@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { User, Building2, Bell, CreditCard, Shield, Check, Download, type LucideIcon } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
@@ -780,7 +781,9 @@ export function Configuracoes() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
