@@ -53,7 +53,7 @@ export function Cadastro() {
       <div className="text-center mb-6">
         <span className="font-serif text-3xl font-bold text-green-500">Terapô.pro</span>
         <h2 className="font-serif text-2xl font-bold text-ink mt-4">Crie sua conta grátis</h2>
-        <p className="text-ink-4 text-sm mt-1">5 relatórios gratuitos, sem cartão de crédito</p>
+        <p className="text-ink-4 text-sm mt-1">5 relatórios gratuitos · até 3 pacientes · sem cartão de crédito</p>
       </div>
 
       <Button variant="google" fullWidth onClick={handleGoogle} type="button">
