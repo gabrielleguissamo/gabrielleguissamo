@@ -10,7 +10,7 @@ import { Input } from '../../components/ui/Input'
 import { Toast } from '../../components/ui/Toast'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
-import { PLAN_LIMITS } from '../../lib/planLimits'
+import { PLAN_LIMITS, FREE_PATIENT_LIMIT } from '../../lib/planLimits'
 import { formatCPF, formatPhone } from '../../lib/masks'
 import { calcAge } from '../../lib/formatDate'
 import type { Patient } from '../../types'
@@ -25,7 +25,7 @@ function initials(name: string): string {
 }
 
 export function Pacientes() {
-  const { user, profile } = useAuth()
+  const { user, profile, hasActiveSubscription } = useAuth()
   const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -172,9 +172,9 @@ export function Pacientes() {
   const filtered = patients.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
 
   const plan = profile?.plan ?? 'inicial'
-  const patientLimit = PLAN_LIMITS[plan].patients
+  const patientLimit = hasActiveSubscription ? PLAN_LIMITS[plan].patients : FREE_PATIENT_LIMIT
   const limitReached = patients.length >= patientLimit
-  const planLabel = plan === 'inicial' ? 'Inicial' : plan === 'profissional' ? 'Profissional' : 'Business'
+  const planLabel = hasActiveSubscription ? (plan === 'inicial' ? 'Inicial' : plan === 'profissional' ? 'Profissional' : 'Business') : 'gratuito'
   const isUnlimited = !Number.isFinite(patientLimit)
   const usagePercent = isUnlimited ? 0 : Math.min(100, (patients.length / patientLimit) * 100)
   const nearLimit = !isUnlimited && usagePercent >= 90 && !limitReached
