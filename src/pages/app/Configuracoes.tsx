@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Building2, Bell, CreditCard, Shield, Check, Download, type LucideIcon } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
@@ -750,9 +751,8 @@ export function Configuracoes() {
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
-          <Card className="p-6 max-w-md w-full">
-            <h3 id="delete-account-title" className="font-serif text-lg font-semibold text-ink mb-2">Excluir conta</h3>
+        <Modal labelledBy="delete-account-title" onClose={() => { setShowDeleteModal(false); setDeleteConfirmText('') }} maxWidth="max-w-md">
+            <h3 id="delete-account-title" className="font-serif text-lg font-semibold text-ink mb-2 pr-6">Excluir conta</h3>
             <p className="text-sm text-ink-4 mb-4">
               Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente apagados.
               Digite <span className="font-bold">EXCLUIR</span> para confirmar.
@@ -768,7 +768,7 @@ export function Configuracoes() {
                 Cancelar
               </Button>
               <Button
-                className="bg-red-500 hover:bg-red-400 active:bg-red-600"
+                variant="danger"
                 onClick={handleDeleteAccount}
                 disabled={deleteConfirmText !== 'EXCLUIR' || deletingAccount}
                 loading={deletingAccount}
@@ -777,8 +777,7 @@ export function Configuracoes() {
                 {deletingAccount ? '' : 'Excluir definitivamente'}
               </Button>
             </div>
-          </Card>
-        </div>
+        </Modal>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
