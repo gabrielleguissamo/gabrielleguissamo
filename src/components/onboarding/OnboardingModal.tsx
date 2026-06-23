@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
+import { Modal } from '../ui/Modal'
 import { formatPhone } from '../../lib/masks'
 
 function isValidBrazilianPhone(value: string): boolean {
@@ -49,8 +50,8 @@ export function OnboardingModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+    <Modal dismissible={false} maxWidth="max-w-md" zIndex="z-[100]">
+      <form onSubmit={handleSubmit}>
         <div className="text-center mb-6">
           <span className="font-serif text-2xl font-bold text-green-500">Terapô.pro</span>
           <h2 className="font-serif text-xl font-bold text-ink mt-3">Antes de começar</h2>
@@ -80,6 +81,6 @@ export function OnboardingModal() {
           Continuar
         </Button>
       </form>
-    </div>
+    </Modal>
   )
 }
