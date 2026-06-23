@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { Bell, MessageCircle, Check } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Toast } from '../../components/ui/Toast'
@@ -195,7 +196,9 @@ export function Avisos() {
         )}
       </Card>
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
