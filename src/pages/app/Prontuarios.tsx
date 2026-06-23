@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { Search, Plus, X, Upload, Download, Trash2, FileText, Calendar, DollarSign, ClipboardList, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
@@ -534,7 +535,9 @@ export function Prontuarios() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
