@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -512,7 +513,9 @@ export function Agenda() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
