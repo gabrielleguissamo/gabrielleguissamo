@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useAuth } from '../../contexts/AuthContext'
 import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { UpgradeModal } from '../relatorio/UpgradeModal'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -11,6 +12,7 @@ export function AppLayout() {
 
   const isAdmin = user?.email === ADMIN_EMAIL
   const showTrialBanner = !isAdmin && !hasActiveSubscription && freeReportsLeft > 0
+  const isLocked = !isAdmin && !hasActiveSubscription && freeReportsLeft <= 0
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -41,6 +43,8 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {isLocked && <UpgradeModal dismissible={false} onClose={() => {}} />}
     </div>
   )
 }
