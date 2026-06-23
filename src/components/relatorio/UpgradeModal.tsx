@@ -1,6 +1,7 @@
-import { Lock, Check, X } from 'lucide-react'
+import { Lock, Check } from 'lucide-react'
 import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
+import { Modal } from '../ui/Modal'
 import { useAuth } from '../../contexts/AuthContext'
 import { getStripeCheckoutUrl, getWhatsappCeoUrl } from '../../lib/stripeConfig'
 
@@ -39,14 +40,7 @@ export function UpgradeModal({ onClose, dismissible = true }: { onClose: () => v
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="max-w-4xl w-full text-center bg-cream rounded-2xl p-6 md:p-10 relative">
-        {dismissible && (
-          <button onClick={onClose} className="absolute top-4 right-4 text-ink-4 hover:text-ink" aria-label="Fechar">
-            <X className="w-5 h-5" />
-          </button>
-        )}
-
+    <Modal onClose={onClose} dismissible={dismissible} maxWidth="max-w-4xl" className="text-center">
         <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
           <Lock className="w-6 h-6" />
         </div>
@@ -86,7 +80,6 @@ export function UpgradeModal({ onClose, dismissible = true }: { onClose: () => v
             Sair da conta
           </button>
         )}
-      </div>
-    </div>
+    </Modal>
   )
 }
