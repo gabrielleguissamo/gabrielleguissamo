@@ -2,7 +2,7 @@ import { Loader2 } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'outline' | 'ghost' | 'google'
+  variant?: 'primary' | 'outline' | 'ghost' | 'google' | 'danger'
   loading?: boolean
   fullWidth?: boolean
 }
@@ -15,6 +15,7 @@ export function Button({ variant = 'primary', loading, fullWidth, children, disa
     outline: 'border border-green-200 text-green-600 hover:bg-green-25 bg-transparent',
     ghost: 'text-ink-3 hover:bg-green-10 bg-transparent',
     google: 'bg-white border border-gray-200 text-ink-2 hover:bg-gray-50 font-medium',
+    danger: 'bg-red-500 text-white hover:bg-red-400 active:bg-red-600',
   }
 
   return (
