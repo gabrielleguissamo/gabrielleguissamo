@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { Plus, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -349,7 +350,9 @@ export function Financeiro() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
