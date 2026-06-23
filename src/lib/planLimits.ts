@@ -8,3 +8,6 @@ export const PLAN_LIMITS: Record<PlanKey, { patients: number; reportsPerMonth: n
 
 // Relatórios gratuitos vitalícios para quem ainda não assinou nenhum plano.
 export const FREE_REPORT_LIMIT = 5
+
+// Limite de pacientes para quem ainda não assinou nenhum plano (período gratuito).
+export const FREE_PATIENT_LIMIT = 3
