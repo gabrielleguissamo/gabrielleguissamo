@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { flushSync } from 'react-dom'
 import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock, PenLine } from 'lucide-react'
 import { PLAN_LIMITS, FREE_REPORT_LIMIT } from '../../lib/planLimits'
@@ -483,7 +484,9 @@ export function Relatorios() {
           </div>
         )}
 
+        <AnimatePresence>
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
       </div>
     )
   }
@@ -671,7 +674,9 @@ export function Relatorios() {
         />
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </div>
   )
 }
