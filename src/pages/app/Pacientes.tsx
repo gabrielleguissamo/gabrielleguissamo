@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { Plus, Search, Trash2, Pencil, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../../components/ui/Card'
@@ -331,7 +332,9 @@ export function Pacientes() {
         </Modal>
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
 
       {nearLimit && showLimitModal && (
         <Modal labelledBy="limit-modal-title" onClose={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }} maxWidth="max-w-sm">
