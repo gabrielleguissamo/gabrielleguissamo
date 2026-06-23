@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react'
+import { Plus, TrendingUp, Calendar, DollarSign, AlertCircle } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
 import { Toast } from '../../components/ui/Toast'
 import { supabase } from '../../lib/supabase'
@@ -250,12 +251,8 @@ export function Financeiro() {
       </Card>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-lg font-semibold">Novo lançamento</h3>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-ink-4" /></button>
-            </div>
+        <Modal onClose={() => setShowModal(false)} maxWidth="max-w-md">
+            <h3 className="font-serif text-lg font-semibold text-ink mb-4 pr-6">Novo lançamento</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-ink-2 block mb-1">Paciente</label>
@@ -349,8 +346,7 @@ export function Financeiro() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>
+        </Modal>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
