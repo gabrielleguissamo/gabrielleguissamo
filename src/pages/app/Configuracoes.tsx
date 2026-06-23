@@ -594,7 +594,7 @@ export function Configuracoes() {
           <h3 className="font-serif text-lg font-semibold text-ink mb-4">Seu plano</h3>
           {!hasActiveSubscription && (
             <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
-              Você ainda não assinou nenhum plano. Está no período gratuito de {FREE_REPORT_LIMIT} relatórios vitalícios.
+              Você ainda não assinou nenhum plano. Você tem {FREE_REPORT_LIMIT} relatórios gratuitos para testar a plataforma.
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
