@@ -102,7 +102,13 @@ export function Relatorios() {
 
   function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setToast({ message: 'Selecione um arquivo de imagem (PNG ou JPG).', type: 'error' })
+      return
+    }
+    if (logoUrl) URL.revokeObjectURL(logoUrl)
     const url = URL.createObjectURL(file)
     setLogoUrl(url)
     const img = new Image()
@@ -112,6 +118,12 @@ export function Relatorios() {
       setBrandColors(cores)
     }
     img.src = url
+  }
+
+  function handleRemoveLogo() {
+    if (logoUrl) URL.revokeObjectURL(logoUrl)
+    setLogoUrl(undefined)
+    setBrandColors(defaultBrandColors)
   }
 
   async function handleGerar() {
@@ -364,8 +376,18 @@ export function Relatorios() {
               onClick={() => logoInputRef.current?.click()}
               className="hidden md:flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-full text-sm text-gray-600 hover:border-green-300 hover:text-green-600 transition-all"
             >
-              {logoUrl ? '✓ Logo' : '+ Logo'}
+              {logoUrl && <img src={logoUrl} alt="" className="w-5 h-5 rounded object-contain" />}
+              {logoUrl ? 'Logo' : '+ Logo'}
             </button>
+            {logoUrl && (
+              <button
+                onClick={handleRemoveLogo}
+                className="hidden md:flex items-center text-xs text-gray-400 hover:text-red-500 transition-all"
+                title="Remover logo"
+              >
+                Remover
+              </button>
+            )}
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
             <button
               onClick={novoRelatorio}
@@ -645,9 +667,15 @@ export function Relatorios() {
       )}
 
       <div className="flex items-center gap-3 text-xs text-gray-400">
+        {logoUrl && <img src={logoUrl} alt="Logo atual" className="w-8 h-8 rounded border border-gray-200 object-contain bg-white" />}
         <button onClick={() => logoInputRef.current?.click()} className="hover:text-green-600 underline">
-          {logoUrl ? '↺ Trocar logo' : '+ Adicionar logo ao relatório'}
+          {logoUrl ? 'Trocar logo' : '+ Adicionar logo ao relatório'}
         </button>
+        {logoUrl && (
+          <button onClick={handleRemoveLogo} className="hover:text-red-500 underline">
+            Remover logo
+          </button>
+        )}
         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
       </div>
 
