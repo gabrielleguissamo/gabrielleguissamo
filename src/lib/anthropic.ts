@@ -1,5 +1,4 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const PROXY_URL = `${SUPABASE_URL}/functions/v1/gerar-relatorio`
+import { supabase } from './supabase'
 
 function removerCabecalhoDuplicado(texto: string): string {
   const linhas = texto.split('\n')
@@ -15,19 +14,17 @@ function removerCabecalhoDuplicado(texto: string): string {
 }
 
 async function callAI(system: string, user: string, maxTokens = 3000): Promise<string> {
-  const res = await fetch(PROXY_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const { data, error: invokeError } = await supabase.functions.invoke('gerar-relatorio', {
+    body: {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: user }],
-    }),
+    },
   })
-  const data = await res.json() as { error?: string; content?: { text: string }[] }
-  if (!res.ok || data.error) throw new Error(data.error ?? `Erro ${res.status}`)
-  if (!data.content?.[0]?.text) throw new Error('Resposta vazia da IA')
+  if (invokeError) throw new Error(invokeError.message ?? 'Erro ao chamar a IA')
+  if (data?.error) throw new Error(data.error)
+  if (!data?.content?.[0]?.text) throw new Error('Resposta vazia da IA')
   return data.content[0].text
 }
 
