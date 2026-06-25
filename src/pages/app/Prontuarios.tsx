@@ -150,6 +150,8 @@ export function Prontuarios() {
 
   useEffect(() => { fetchPatients() }, [user])
   useEffect(() => {
+    setShowResumo(false)
+    setResumoPaciente('')
     if (selected) {
       fetchRecords(selected.id)
       fetchDocuments(selected.id)
