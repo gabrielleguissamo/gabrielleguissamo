@@ -4,7 +4,7 @@ import {
   DollarSign, BarChart2, Settings, LogOut, X, ShieldCheck, Bell
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { isAdminEmail } from '../../lib/adminConfig'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -24,7 +24,7 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps) {
   const { profile, user, signOut } = useAuth()
   const navigate = useNavigate()
-  const isAdmin = user?.email === ADMIN_EMAIL
+  const isAdmin = isAdminEmail(user?.email)
 
   const handleSignOut = async () => {
     await signOut()
