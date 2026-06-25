@@ -13,7 +13,7 @@ import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import type { Profile } from '../../types'
-import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { isAdminEmail } from '../../lib/adminConfig'
 import { FREE_REPORT_LIMIT } from '../../lib/planLimits'
 
 const PLAN_LABELS: Record<string, string> = {
@@ -105,7 +105,7 @@ export function Admin() {
   }
 
   useEffect(() => {
-    if (user?.email !== ADMIN_EMAIL) return
+    if (!isAdminEmail(user?.email)) return
     fetchData()
   }, [user])
 
@@ -131,7 +131,7 @@ export function Admin() {
     setGrantingId(null)
   }
 
-  if (user?.email !== ADMIN_EMAIL) {
+  if (!isAdminEmail(user?.email)) {
     return <Navigate to="/dashboard" replace />
   }
 
