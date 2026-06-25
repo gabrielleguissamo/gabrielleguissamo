@@ -247,6 +247,7 @@ export function Relatorios() {
     setEditando(false)
     setResumoFamiliar(rel.resumo_familiar || '')
     setMostrarResumo(!!rel.resumo_familiar)
+    setAssinaturaUrl(undefined)
     setTela('resultado')
   }
 
@@ -391,7 +392,7 @@ export function Relatorios() {
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
             <button
               onClick={novoRelatorio}
-              disabled={reportLimitReached && hasActiveSubscription}
+              disabled={reportLimitReached}
               className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-full text-sm font-bold hover:bg-green-400 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Novo relatório
