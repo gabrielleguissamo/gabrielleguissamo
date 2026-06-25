@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Info, X } from 'lucide-react'
 
@@ -9,10 +9,13 @@ interface ToastProps {
 }
 
 export function Toast({ message, type = 'info', onClose }: ToastProps) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 4000)
+    const timer = setTimeout(() => onCloseRef.current(), 4000)
     return () => clearTimeout(timer)
-  }, [onClose])
+  }, [])
 
   const styles = {
     success: 'bg-green-500 text-white',
