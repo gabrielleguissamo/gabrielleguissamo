@@ -11,7 +11,7 @@ import { Toast } from '../../components/ui/Toast'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { PLAN_LIMITS, FREE_PATIENT_LIMIT } from '../../lib/planLimits'
-import { ADMIN_EMAIL } from '../../lib/adminConfig'
+import { isAdminEmail } from '../../lib/adminConfig'
 import { formatCPF, formatPhone } from '../../lib/masks'
 import { calcAge } from '../../lib/formatDate'
 import type { Patient } from '../../types'
@@ -172,7 +172,7 @@ export function Pacientes() {
 
   const filtered = patients.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
 
-  const isAdmin = user?.email === ADMIN_EMAIL
+  const isAdmin = isAdminEmail(user?.email)
   const plan = profile?.plan ?? 'inicial'
   const patientLimit = isAdmin ? Infinity : hasActiveSubscription ? PLAN_LIMITS[plan].patients : FREE_PATIENT_LIMIT
   const limitReached = patients.length >= patientLimit
