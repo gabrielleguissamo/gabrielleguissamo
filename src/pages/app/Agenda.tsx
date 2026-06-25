@@ -58,6 +58,7 @@ export function Agenda() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()))
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [googleConnected, setGoogleConnected] = useState(false)
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
 
   const [form, setForm] = useState({
     patient_id: '', date: '', time: '', duration: '60',
@@ -106,7 +107,8 @@ export function Agenda() {
   function gerarDatasRecorrencia(): string[] {
     if (!form.recorrente) return [form.date]
     const step = form.frequencia === 'quinzenal' ? 14 : 7
-    const n = Math.min(Math.max(parseInt(form.repeticoes) || 1, 1), 52)
+    const parsed = parseInt(form.repeticoes)
+    const n = Math.min(Math.max(Number.isFinite(parsed) ? parsed : 1, 1), 52)
     const base = new Date(form.date + 'T00:00:00')
     const datas: string[] = []
     for (let i = 0; i < n; i++) {
@@ -119,6 +121,10 @@ export function Agenda() {
 
   async function handleSave() {
     if (!user || !form.patient_id || !form.date || !form.time) return
+    if (form.recorrente && !Number.isFinite(parseInt(form.repeticoes))) {
+      setToast({ message: 'Informe um número válido de repetições para a recorrência.', type: 'error' })
+      return
+    }
     setSaving(true)
 
     const datas = gerarDatasRecorrencia()
@@ -223,16 +229,23 @@ export function Agenda() {
   }
 
   async function toggleStatus(session: SessionWithPatient) {
+    if (updatingIds.has(session.id)) return
     const nextStatus: Record<AppSession['status'], AppSession['status']> = {
       pendente: 'confirmado',
       confirmado: 'cancelado',
       cancelado: 'pendente',
     }
     const newStatus = nextStatus[session.status]
+    if (session.status === 'cancelado' && newStatus === 'pendente') {
+      const confirmar = window.confirm('Esta sessão estava cancelada. Reabrir vai recriar o evento na agenda e o lançamento financeiro. Confirma?')
+      if (!confirmar) return
+    }
+    setUpdatingIds(prev => new Set(prev).add(session.id))
     const { error } = await supabase
       .from('sessions')
       .update({ status: newStatus })
       .eq('id', session.id)
+    setUpdatingIds(prev => { const next = new Set(prev); next.delete(session.id); return next })
     if (error) {
       setToast({ message: 'Erro ao atualizar status', type: 'error' })
     } else {
@@ -359,8 +372,9 @@ export function Agenda() {
                       <div key={dayIdx} className="border-b border-r h-12 p-1 relative">
                         {session && (
                           <button
-                            className={`w-full text-xs rounded px-1 py-0.5 truncate text-left ${statusColors[session.status]}`}
+                            className={`w-full text-xs rounded px-1 py-0.5 truncate text-left ${statusColors[session.status]} ${updatingIds.has(session.id) ? 'opacity-50 cursor-wait' : ''}`}
                             onClick={() => toggleStatus(session)}
+                            disabled={updatingIds.has(session.id)}
                             title="Clique para mudar status"
                           >
                             {session.patients?.name ?? 'Paciente'}
