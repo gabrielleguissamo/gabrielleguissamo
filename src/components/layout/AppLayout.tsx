@@ -5,10 +5,11 @@ import { Topbar } from './Topbar'
 import { useAuth } from '../../contexts/AuthContext'
 import { isAdminEmail } from '../../lib/adminConfig'
 import { UpgradeModal } from '../relatorio/UpgradeModal'
+import { OnboardingModal } from '../onboarding/OnboardingModal'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, hasActiveSubscription, freeReportsLeft } = useAuth()
+  const { user, profile, hasActiveSubscription, freeReportsLeft } = useAuth()
 
   const isAdmin = isAdminEmail(user?.email)
   const showTrialBanner = !isAdmin && !hasActiveSubscription && freeReportsLeft > 0
@@ -56,6 +57,7 @@ export function AppLayout() {
         </main>
       </div>
 
+      {profile && !profile.onboarding_completed && <OnboardingModal />}
       {isLocked && <UpgradeModal dismissible={false} onClose={() => {}} />}
     </div>
   )
