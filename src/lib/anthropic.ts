@@ -33,8 +33,9 @@ export interface ParamsRelatorio {
   tipoRelatorio: 'evolucao' | 'avaliacao' | 'alta' | 'encaminhamento'
   nomePaciente: string
   dataNascimento?: string
-  financiamento: 'convenio' | 'particular'
-  cidPrincipal: string
+  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  financiamento?: 'convenio' | 'particular'
+  cidPrincipal?: string
   cidSecundario?: string
   cif?: string
   tuss?: string
@@ -44,10 +45,70 @@ export interface ParamsRelatorio {
   crfto: string
 }
 
-export async function gerarRelatorio(p: ParamsRelatorio): Promise<string> {
+async function gerarRelatorioHolistico(p: ParamsRelatorio): Promise<string> {
   const secoes: Record<string, string> = {
-    evolucao: secoesEvolucao(p.financiamento),
-    avaliacao: secoesAvaliacao(p.financiamento),
+    evolucao: `SEÇÕES OBRIGATÓRIAS:
+2. PERÍODO DE REFERÊNCIA
+3. OBJETIVOS DA SESSÃO
+4. PRÁTICAS E TÉCNICAS UTILIZADAS
+5. PERCEPÇÕES E OBSERVAÇÕES
+6. EVOLUÇÃO E ESTADO ATUAL
+7. RECOMENDAÇÕES
+8. CONCLUSÃO`,
+    avaliacao: `SEÇÕES OBRIGATÓRIAS:
+2. MOTIVO DA BUSCA
+3. HISTÓRICO RELATADO
+4. OBSERVAÇÕES INICIAIS
+5. OBJETIVOS PROPOSTOS
+6. PLANO DE ACOMPANHAMENTO
+7. CONCLUSÃO`,
+    alta: `SEÇÕES OBRIGATÓRIAS:
+2. RESUMO DO ACOMPANHAMENTO
+3. CONQUISTAS E EVOLUÇÃO
+4. ORIENTAÇÕES FINAIS
+5. CONCLUSÃO`,
+    encaminhamento: `SEÇÕES OBRIGATÓRIAS:
+2. MOTIVO DO ENCAMINHAMENTO
+3. RESUMO DO ACOMPANHAMENTO
+4. OBSERVAÇÕES RELEVANTES
+5. CONCLUSÃO`,
+  }
+
+  const system = `Você é especialista em terapias holísticas e práticas integrativas/complementares, com domínio em documentação de sessão acolhedora e profissional. Gera relatórios de sessão prontos para uso após validação do terapeuta, sem usar linguagem de diagnóstico médico.`
+
+  const user = `Gere relatório de sessão de terapia holística — tipo: ${p.tipoRelatorio.toUpperCase()}
+
+DADOS:
+- Paciente: ${p.nomePaciente}${p.dataNascimento ? ` | Data de nascimento: ${p.dataNascimento}` : ''}
+- Terapeuta: ${p.nomeTerapeuta}${p.crfto ? ` | Registro: ${p.crfto}` : ''}
+- Período: ${p.periodoInicio} a ${p.periodoFim}
+
+BRIEFING DO TERAPEUTA:
+${p.briefing}
+
+${secoes[p.tipoRelatorio]}
+
+REGRAS:
+- Português brasileiro formal, tom acolhedor e respeitoso
+- Foco em bem-estar, autoconhecimento e percepções da sessão — NUNCA usar linguagem de diagnóstico médico, CID ou termos clínicos
+- Conteúdo real baseado no briefing — sem texto genérico
+- NUNCA usar placeholders entre colchetes (ex: "[descrever aqui]", "[data da sessão]"). Se um dado não foi fornecido, OMITA a frase ou o dado inteiro — não invente e não deixe lacunas visíveis
+- Usar ## para títulos de seção
+- Usar **negrito** apenas para dados importantes
+- NÃO usar --- como separador
+- NÃO repita o cabeçalho de identificação (paciente, data de nascimento, terapeuta, registro, período, data) — esses dados já aparecem no cabeçalho do documento
+- Começar diretamente pela seção 2`
+
+  const resposta = await callAI(system, user, 3000)
+  return removerCabecalhoDuplicado(resposta)
+}
+
+export async function gerarRelatorio(p: ParamsRelatorio): Promise<string> {
+  if (p.especialidade === 'holistico') return gerarRelatorioHolistico(p)
+
+  const secoes: Record<string, string> = {
+    evolucao: secoesEvolucao(p.financiamento ?? 'particular'),
+    avaliacao: secoesAvaliacao(p.financiamento ?? 'particular'),
     alta: secoesAlta(),
     encaminhamento: secoesEncaminhamento(),
   }
