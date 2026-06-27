@@ -33,7 +33,8 @@ export interface ParamsRelatorio {
   tipoRelatorio: 'evolucao' | 'avaliacao' | 'alta' | 'encaminhamento'
   nomePaciente: string
   dataNascimento?: string
-  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  isClinical?: boolean
+  especialidadeNome?: string
   financiamento?: 'convenio' | 'particular'
   cidPrincipal?: string
   cidSecundario?: string
@@ -46,6 +47,7 @@ export interface ParamsRelatorio {
 }
 
 async function gerarRelatorioHolistico(p: ParamsRelatorio): Promise<string> {
+  const nomeEspecialidade = p.especialidadeNome?.trim() || 'Terapeuta Holístico'
   const secoes: Record<string, string> = {
     evolucao: `SEÇÕES OBRIGATÓRIAS:
 2. PERÍODO DE REFERÊNCIA
@@ -74,13 +76,13 @@ async function gerarRelatorioHolistico(p: ParamsRelatorio): Promise<string> {
 5. CONCLUSÃO`,
   }
 
-  const system = `Você é especialista em terapias holísticas e práticas integrativas/complementares, com domínio em documentação de sessão acolhedora e profissional. Gera relatórios de sessão prontos para uso após validação do terapeuta, sem usar linguagem de diagnóstico médico.`
+  const system = `Você é especialista em ${nomeEspecialidade}, com domínio em documentação de sessão acolhedora e profissional adequada a essa prática específica. Gera relatórios de sessão prontos para uso após validação do terapeuta, sem usar linguagem de diagnóstico médico.`
 
-  const user = `Gere relatório de sessão de terapia holística — tipo: ${p.tipoRelatorio.toUpperCase()}
+  const user = `Gere relatório de sessão de ${nomeEspecialidade} — tipo: ${p.tipoRelatorio.toUpperCase()}
 
 DADOS:
 - Paciente: ${p.nomePaciente}${p.dataNascimento ? ` | Data de nascimento: ${p.dataNascimento}` : ''}
-- Terapeuta: ${p.nomeTerapeuta}${p.crfto ? ` | Registro: ${p.crfto}` : ''}
+- Terapeuta: ${p.nomeTerapeuta} (${nomeEspecialidade})${p.crfto ? ` | Registro: ${p.crfto}` : ''}
 - Período: ${p.periodoInicio} a ${p.periodoFim}
 
 BRIEFING DO TERAPEUTA:
@@ -90,7 +92,7 @@ ${secoes[p.tipoRelatorio]}
 
 REGRAS:
 - Português brasileiro formal, tom acolhedor e respeitoso
-- Foco em bem-estar, autoconhecimento e percepções da sessão — NUNCA usar linguagem de diagnóstico médico, CID ou termos clínicos
+- Foco em bem-estar, autoconhecimento e percepções da sessão, com vocabulário e conceitos coerentes especificamente com a prática de ${nomeEspecialidade} — NUNCA usar linguagem de diagnóstico médico, CID ou termos clínicos
 - Conteúdo real baseado no briefing — sem texto genérico
 - NUNCA usar placeholders entre colchetes (ex: "[descrever aqui]", "[data da sessão]"). Se um dado não foi fornecido, OMITA a frase ou o dado inteiro — não invente e não deixe lacunas visíveis
 - Usar ## para títulos de seção
@@ -104,7 +106,7 @@ REGRAS:
 }
 
 export async function gerarRelatorio(p: ParamsRelatorio): Promise<string> {
-  if (p.especialidade === 'holistico') return gerarRelatorioHolistico(p)
+  if (p.isClinical === false) return gerarRelatorioHolistico(p)
 
   const secoes: Record<string, string> = {
     evolucao: secoesEvolucao(p.financiamento ?? 'particular'),
