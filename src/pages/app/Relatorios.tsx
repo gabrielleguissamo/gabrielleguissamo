@@ -132,7 +132,10 @@ export function Relatorios() {
 
   async function handleGerar() {
     const { paciente, tipo, financiamento, cidPrincipal } = dadosWizard
-    if (!user || !paciente || !tipo || !financiamento || !cidPrincipal) return
+    const especialidade = profile?.specialty
+    const isHolistico = especialidade === 'holistico'
+    if (!user || !paciente || !tipo) return
+    if (!isHolistico && (!financiamento || !cidPrincipal)) return
     const isPrimeiroRelatorio = relatorios.length === 0
     setGerando(true)
     setErro('')
@@ -142,6 +145,7 @@ export function Relatorios() {
         nomePaciente: paciente.name,
         dataNascimento: pacienteCompleto?.birth_date ? formatarData(pacienteCompleto.birth_date) : undefined,
         tipoRelatorio: tipo,
+        especialidade,
         financiamento,
         cidPrincipal,
         cidSecundario: dadosWizard.cidSecundario,
@@ -558,7 +562,7 @@ export function Relatorios() {
         </div>
 
         {passo === 1 && (
-          <WizardStep1 dados={dadosWizard} onChange={setDadosWizard} onProximo={() => setPasso(2)} patients={patients} />
+          <WizardStep1 dados={dadosWizard} onChange={setDadosWizard} onProximo={() => setPasso(2)} patients={patients} especialidade={profile?.specialty} />
         )}
         {passo === 2 && (
           <>
