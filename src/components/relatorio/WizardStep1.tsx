@@ -145,12 +145,12 @@ interface Props {
   onChange: (d: Dados) => void
   onProximo: () => void
   patients: { id: string; name: string; email?: string }[]
-  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  isClinical?: boolean
 }
 
-export function WizardStep1({ dados, onChange, onProximo, patients, especialidade }: Props) {
+export function WizardStep1({ dados, onChange, onProximo, patients, isClinical = true }: Props) {
   const [buscaPaciente, setBuscaPaciente] = useState(dados.paciente?.name || '')
-  const isHolistico = especialidade === 'holistico'
+  const isHolistico = !isClinical
 
   const d = dados
   const valido = isHolistico
