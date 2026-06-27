@@ -8,7 +8,7 @@ interface PDFOptions {
   nomePaciente: string
   nomeTerapeuta?: string
   crfto?: string
-  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  especialidade?: string
   cidPrincipal?: string
   financiamento?: 'convenio' | 'particular'
   tuss?: string
