@@ -5,6 +5,7 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Modal } from '../ui/Modal'
 import { formatPhone } from '../../lib/masks'
+import { track } from '../../lib/analytics'
 
 function isValidBrazilianPhone(value: string): boolean {
   const digits = value.replace(/\D/g, '')
@@ -45,6 +46,7 @@ export function OnboardingModal() {
       setLoading(false)
       return
     }
+    track('onboarding_completed')
     await refreshProfile()
     setLoading(false)
   }
