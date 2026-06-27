@@ -76,7 +76,7 @@ export function Cadastro() {
           </button>
         </div>
         <Input label="Confirmar senha" type="password" placeholder="Repita a senha" value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} required />
-        <Input label="CRF/TO (opcional)" placeholder="ex: TO-SP 12345" value={form.crfTo} onChange={e => set('crfTo', e.target.value)} />
+        <Input label="Registro profissional (opcional)" placeholder="ex: TO-SP 12345, CREFITO 12345" value={form.crfTo} onChange={e => set('crfTo', e.target.value)} />
         <label className="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" checked={form.agreed} onChange={e => set('agreed', e.target.checked)} className="mt-0.5 accent-green-500" />
           <span className="text-sm text-ink-4">
