@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import type { BrandColors } from '../../lib/brandColors'
 import { defaultBrandColors } from '../../lib/brandColors'
 import { formatarData } from '../../lib/formatDate'
+import { getSpecialtyLabel } from '../../lib/specialty'
 
 interface Props {
   id?: string
@@ -12,8 +13,9 @@ interface Props {
   nomePaciente: string
   nomeTerapeuta: string
   crfto: string
-  cidPrincipal: string
-  financiamento: string
+  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  cidPrincipal?: string
+  financiamento?: string
   tuss?: string
   periodoInicio: string
   periodoFim: string
@@ -33,7 +35,7 @@ const TIPO_SUBTITULO: Record<string, string> = {
 export function RelatorioPreview({
   id = 'relatorio-preview',
   conteudo, editando, onChange,
-  nomePaciente, nomeTerapeuta, crfto,
+  nomePaciente, nomeTerapeuta, crfto, especialidade,
   cidPrincipal, financiamento, tuss,
   periodoInicio, periodoFim,
   logoUrl, logoRef,
@@ -47,8 +49,8 @@ export function RelatorioPreview({
   const meta = [
     ['Paciente', nomePaciente],
     ['Período', `${inicio} a ${fim}`],
-    ['Diagnóstico (CID-10)', cidPrincipal],
-    ['Financiamento', financiamento === 'convenio' ? `Convênio${tuss ? ` — TUSS: ${tuss}` : ''}` : 'Particular'],
+    ...(cidPrincipal ? [['Diagnóstico (CID-10)', cidPrincipal]] : []),
+    ...(financiamento ? [['Financiamento', financiamento === 'convenio' ? `Convênio${tuss ? ` — TUSS: ${tuss}` : ''}` : 'Particular']] : []),
     ['Data de emissão', hoje],
   ]
 
@@ -82,8 +84,8 @@ export function RelatorioPreview({
           </div>
           <div className="text-right">
             <p className="font-bold text-sm" style={{ color: brandColors.primary }}>{nomeTerapeuta || 'Nome do Terapeuta'}</p>
-            <p className="text-gray-500 text-xs mt-0.5">Terapeuta Ocupacional</p>
-            {crfto && <p className="text-gray-500 text-xs">CRF/TO: {crfto}</p>}
+            <p className="text-gray-500 text-xs mt-0.5">{getSpecialtyLabel(especialidade)}</p>
+            {crfto && <p className="text-gray-500 text-xs">Registro: {crfto}</p>}
           </div>
         </div>
 
@@ -93,7 +95,7 @@ export function RelatorioPreview({
           className="text-center text-base font-bold uppercase tracking-wide mb-1"
           style={{ color: brandColors.primary, fontFamily: 'Fraunces, serif' }}
         >
-          Relatório Clínico de Terapia Ocupacional
+          {especialidade === 'holistico' ? 'Relatório de Sessão' : 'Relatório Clínico de Terapia Ocupacional'}
         </h1>
         {tipoRelatorio && (
           <p className="text-center text-xs font-medium text-gray-500 mb-5">
@@ -174,8 +176,8 @@ export function RelatorioPreview({
             <div>
               <div className="w-56 border-b border-gray-400 mb-2" />
               <p className="text-sm font-semibold text-gray-800">{nomeTerapeuta}</p>
-              <p className="text-xs text-gray-500">Terapeuta Ocupacional</p>
-              {crfto && <p className="text-xs text-gray-500">CRF/TO: {crfto}</p>}
+              <p className="text-xs text-gray-500">{getSpecialtyLabel(especialidade)}</p>
+              {crfto && <p className="text-xs text-gray-500">Registro: {crfto}</p>}
             </div>
             <div className="text-right text-xs text-gray-400">
               <p>Data: _____ / _____ / _______</p>
