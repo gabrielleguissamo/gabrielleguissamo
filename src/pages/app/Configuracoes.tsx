@@ -481,10 +481,10 @@ export function Configuracoes() {
               onChange={e => setFullName(e.target.value)}
             />
             <Input
-              label="CRF/TO"
+              label="Registro profissional"
               value={crfTo}
               onChange={e => setCrfTo(e.target.value)}
-              placeholder="TO-SP 12345"
+              placeholder="ex: TO-SP 12345, CREFITO 12345"
             />
             <Input
               label="Telefone / WhatsApp"
