@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import { formatarData } from './formatDate'
+import { getSpecialtyLabel } from './specialty'
 
 interface PDFOptions {
   nomeArquivo: string
@@ -7,8 +8,9 @@ interface PDFOptions {
   nomePaciente: string
   nomeTerapeuta?: string
   crfto?: string
-  cidPrincipal: string
-  financiamento: 'convenio' | 'particular'
+  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  cidPrincipal?: string
+  financiamento?: 'convenio' | 'particular'
   tuss?: string
   periodoInicio: string
   periodoFim: string
@@ -67,6 +69,7 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
     nomePaciente,
     nomeTerapeuta = '',
     crfto = '',
+    especialidade,
     cidPrincipal,
     financiamento,
     tuss,
@@ -150,10 +153,10 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.5)
   pdf.setTextColor(140, 140, 140)
-  pdf.text('Terapeuta Ocupacional', pageWidth - marginH, y, { align: 'right' })
+  pdf.text(getSpecialtyLabel(especialidade), pageWidth - marginH, y, { align: 'right' })
   if (crfto) {
     y += 3.6
-    pdf.text('CRF/TO: ' + crfto, pageWidth - marginH, y, { align: 'right' })
+    pdf.text('Registro: ' + crfto, pageWidth - marginH, y, { align: 'right' })
   }
   y += 5
 
@@ -188,8 +191,8 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
   const meta: [string, string][] = [
     ['Paciente', nomePaciente],
     ['Período', inicio + ' a ' + fim],
-    ['Diagnóstico (CID-10)', cidPrincipal || '—'],
-    ['Financiamento', financiamentoLabel],
+    ...(cidPrincipal ? [['Diagnóstico (CID-10)', cidPrincipal] as [string, string]] : []),
+    ...(financiamento ? [['Financiamento', financiamentoLabel] as [string, string]] : []),
     ['Data de emissão', hoje],
   ]
 
@@ -302,10 +305,10 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.5)
   pdf.setTextColor(120, 120, 120)
-  pdf.text('Terapeuta Ocupacional', marginH, y)
+  pdf.text(getSpecialtyLabel(especialidade), marginH, y)
   if (crfto) {
     y += 3.6
-    pdf.text('CRF/TO: ' + crfto, marginH, y)
+    pdf.text('Registro: ' + crfto, marginH, y)
   }
 
   // Rodape com numeracao final de paginas
@@ -318,7 +321,7 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(6.5)
     pdf.setTextColor(180, 180, 180)
-    const footerLeft = (nomeTerapeuta ? nomeTerapeuta : '') + (crfto ? (' | CRF/TO: ' + crfto) : '') + ' | Terapô.pro'
+    const footerLeft = (nomeTerapeuta ? nomeTerapeuta : '') + (crfto ? (' | Registro: ' + crfto) : '') + ' | Terapô.pro'
     pdf.text(footerLeft, marginH, pageHeight - 7)
     pdf.text(i + ' / ' + totalPages, pageWidth - marginH, pageHeight - 7, { align: 'right' })
   }
