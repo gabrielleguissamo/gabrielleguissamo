@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { track } from '../../lib/analytics'
 import { AuthCard } from '../../components/auth/AuthCard'
 import { Button } from '../../components/ui/Button'
 
@@ -78,6 +79,7 @@ export function VerificarEmail() {
     if (error) {
       setError('Código inválido ou expirado. Tente novamente ou reenvie o código.')
     } else {
+      track('signup_completed')
       sessionStorage.removeItem('verificarEmail')
       navigate('/dashboard')
     }
