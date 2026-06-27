@@ -61,6 +61,7 @@ export function Configuracoes() {
   const { user, profile, refreshProfile, signOut, hasActiveSubscription } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>('perfil')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [loadingPortal, setLoadingPortal] = useState(false)
 
   async function saveToProfile(data: Record<string, unknown>) {
     if (!user) return false
@@ -422,6 +423,19 @@ export function Configuracoes() {
     window.open(getStripeCheckoutUrl(plan, user.id, user.email), '_blank')
   }
 
+  async function handleManageSubscription() {
+    setLoadingPortal(true)
+    const { data, error } = await supabase.functions.invoke('create-portal-session', {
+      body: { return_url: window.location.href },
+    })
+    setLoadingPortal(false)
+    if (error || !data?.url) {
+      setToast({ message: 'Não foi possível abrir o portal de gestão da assinatura. Tente novamente.', type: 'error' })
+      return
+    }
+    window.location.href = data.url
+  }
+
   const currentPlan: PlanKey = profile?.plan ?? 'inicial'
   const emailVerificado = !!user?.email_confirmed_at
   const totpVerified = mfaFactors.find(f => f.status === 'verified')
@@ -632,6 +646,13 @@ export function Configuracoes() {
               )
             })}
           </div>
+          {hasActiveSubscription && (
+            <div className="mt-6">
+              <Button variant="outline" onClick={handleManageSubscription} loading={loadingPortal}>
+                {loadingPortal ? '' : 'Gerenciar assinatura (cancelar, trocar cartão, ver faturas)'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
