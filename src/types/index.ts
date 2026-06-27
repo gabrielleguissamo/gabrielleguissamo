@@ -31,6 +31,7 @@ export interface Profile {
   full_name: string
   email: string
   crf_to?: string
+  specialty: 'terapeuta_ocupacional' | 'holistico'
   bio?: string
   phone?: string
   city?: string
