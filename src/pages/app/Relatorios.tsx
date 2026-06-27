@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { flushSync } from 'react-dom'
 import { Plus, FileText, Sparkles, Download, Edit2, Check, X, MessageCircle, RefreshCw, ChevronLeft, Lock, PenLine } from 'lucide-react'
 import { PLAN_LIMITS, FREE_REPORT_LIMIT } from '../../lib/planLimits'
@@ -18,6 +18,8 @@ import { RelatorioCard } from '../../components/relatorio/RelatorioCard'
 import { ModalEmail } from '../../components/relatorio/ModalEmail'
 import { ModalExcluir } from '../../components/relatorio/ModalExcluir'
 import { UpgradeModal } from '../../components/relatorio/UpgradeModal'
+import { Modal } from '../../components/ui/Modal'
+import { Button } from '../../components/ui/Button'
 import { SignaturePad } from '../../components/ui/SignaturePad'
 import { Toast } from '../../components/ui/Toast'
 import ReactMarkdown from 'react-markdown'
@@ -71,6 +73,7 @@ export function Relatorios() {
   const [enviandoEmail, setEnviandoEmail] = useState(false)
   const [assinaturaUrl, setAssinaturaUrl] = useState<string | undefined>()
   const [showSignaturePad, setShowSignaturePad] = useState(false)
+  const [showFirstReportCelebration, setShowFirstReportCelebration] = useState(false)
 
   async function fetchRelatorios() {
     if (!user) return
@@ -129,6 +132,7 @@ export function Relatorios() {
   async function handleGerar() {
     const { paciente, tipo, financiamento, cidPrincipal } = dadosWizard
     if (!user || !paciente || !tipo || !financiamento || !cidPrincipal) return
+    const isPrimeiroRelatorio = relatorios.length === 0
     setGerando(true)
     setErro('')
     try {
@@ -178,6 +182,7 @@ export function Relatorios() {
       setEditando(false)
       setRelatorios(prev => [rel, ...prev])
       setTela('resultado')
+      if (isPrimeiroRelatorio) setShowFirstReportCelebration(true)
       if (!hasActiveSubscription) await refreshProfile()
     } catch (e) {
       setErro(traduzirErroAPI(e as Error))
@@ -481,6 +486,24 @@ export function Relatorios() {
         )}
 
         {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
+
+        {showFirstReportCelebration && (
+          <Modal onClose={() => setShowFirstReportCelebration(false)} maxWidth="max-w-md" className="text-center">
+            <motion.div
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+              className="text-5xl mb-4"
+            >
+              🎉
+            </motion.div>
+            <h2 className="font-serif text-xl font-bold text-ink mb-2">Seu primeiro relatório está pronto!</h2>
+            <p className="text-ink-4 text-sm mb-6">
+              Escrever isso do zero levaria de 20 a 30 minutos. Você acabou de economizar esse tempo — e isso vai se repetir em cada relatório daqui pra frente.
+            </p>
+            <Button fullWidth onClick={() => setShowFirstReportCelebration(false)}>Continuar</Button>
+          </Modal>
+        )}
 
         {reportNearLimit && showReportLimitModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
