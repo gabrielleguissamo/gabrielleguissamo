@@ -6,6 +6,7 @@ import { Input } from '../ui/Input'
 import { Modal } from '../ui/Modal'
 import { formatPhone } from '../../lib/masks'
 import { track } from '../../lib/analytics'
+import { SPECIALTY_OPTIONS, type Specialty } from '../../lib/specialty'
 
 function isValidBrazilianPhone(value: string): boolean {
   const digits = value.replace(/\D/g, '')
@@ -21,6 +22,7 @@ export function OnboardingModal() {
   const { user, refreshProfile } = useAuth()
   const [preferredName, setPreferredName] = useState('')
   const [phone, setPhone] = useState('')
+  const [specialty, setSpecialty] = useState<Specialty>('terapeuta_ocupacional')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -37,6 +39,7 @@ export function OnboardingModal() {
       .update({
         preferred_name: preferredName.trim(),
         phone,
+        specialty,
         onboarding_completed: true,
       })
       .eq('id', user.id)
@@ -75,6 +78,22 @@ export function OnboardingModal() {
             onChange={e => setPhone(formatPhone(e.target.value))}
             required
           />
+          <div>
+            <label className="text-sm font-medium text-ink-2 block mb-2">Qual sua especialidade?</label>
+            <div className="space-y-2">
+              {SPECIALTY_OPTIONS.map(opt => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setSpecialty(opt.key)}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-all ${specialty === opt.key ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                >
+                  <p className="font-medium text-sm text-ink">{opt.label}</p>
+                  <p className="text-xs text-ink-4">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
