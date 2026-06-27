@@ -34,9 +34,21 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         {showTrialBanner && (
-          <div className="bg-amber-50 border-b border-amber-200 text-amber-700 text-sm text-center py-2 px-4">
-            Você ainda tem {freeReportsLeft} relatório{freeReportsLeft !== 1 ? 's' : ''} gratuito{freeReportsLeft !== 1 ? 's' : ''}.{' '}
-            <a href="/configuracoes" className="font-medium underline">Assine agora</a> para ter acesso ilimitado.
+          <div
+            className={`border-b text-sm text-center py-2 px-4 ${
+              freeReportsLeft <= 1
+                ? 'bg-red-50 border-red-300 text-red-700 font-medium animate-pulse'
+                : freeReportsLeft === 2
+                ? 'bg-orange-50 border-orange-300 text-orange-700'
+                : 'bg-amber-50 border-amber-200 text-amber-700'
+            }`}
+          >
+            {freeReportsLeft <= 1 ? (
+              <>Este é seu último relatório gratuito!{' '}</>
+            ) : (
+              <>Você ainda tem {freeReportsLeft} relatórios gratuitos.{' '}</>
+            )}
+            <a href="/configuracoes" className="font-medium underline">Assine agora</a> para não perder acesso.
           </div>
         )}
         <main className="flex-1 overflow-auto bg-cream">
