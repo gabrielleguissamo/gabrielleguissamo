@@ -14,7 +14,7 @@ export function VerificarEmail() {
   }
   const email = stateEmail || sessionStorage.getItem('verificarEmail') || ''
 
-  const CODE_LENGTH = 8
+  const CODE_LENGTH = 6
 
   const [codigo, setCodigo] = useState<string[]>(Array(CODE_LENGTH).fill(''))
   const [loading, setLoading] = useState(false)
