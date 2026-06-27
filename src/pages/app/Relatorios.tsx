@@ -281,6 +281,7 @@ export function Relatorios() {
       crfto,
       cidPrincipal: rel.cid_principal,
       financiamento: rel.financiamento,
+      especialidade: profile?.specialty,
       tuss: rel.tuss,
       periodoInicio: rel.periodo_inicio,
       periodoFim: rel.periodo_fim,
@@ -303,6 +304,7 @@ export function Relatorios() {
         crfto,
         cidPrincipal: rel.cid_principal,
         financiamento: rel.financiamento,
+        especialidade: profile?.specialty,
         tuss: rel.tuss,
         periodoInicio: rel.periodo_inicio,
         periodoFim: rel.periodo_fim,
@@ -663,6 +665,7 @@ export function Relatorios() {
           crfto={crfto}
           cidPrincipal={relatorioAtual.cid_principal}
           financiamento={relatorioAtual.financiamento}
+          especialidade={profile?.specialty}
           tuss={relatorioAtual.tuss}
           periodoInicio={relatorioAtual.periodo_inicio}
           periodoFim={relatorioAtual.periodo_fim}
