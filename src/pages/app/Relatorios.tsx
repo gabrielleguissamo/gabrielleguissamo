@@ -132,10 +132,9 @@ export function Relatorios() {
 
   async function handleGerar() {
     const { paciente, tipo, financiamento, cidPrincipal } = dadosWizard
-    const especialidade = profile?.specialty
-    const isHolistico = especialidade === 'holistico'
+    const isClinical = profile?.is_clinical ?? true
     if (!user || !paciente || !tipo) return
-    if (!isHolistico && (!financiamento || !cidPrincipal)) return
+    if (isClinical && (!financiamento || !cidPrincipal)) return
     const isPrimeiroRelatorio = relatorios.length === 0
     setGerando(true)
     setErro('')
@@ -145,7 +144,8 @@ export function Relatorios() {
         nomePaciente: paciente.name,
         dataNascimento: pacienteCompleto?.birth_date ? formatarData(pacienteCompleto.birth_date) : undefined,
         tipoRelatorio: tipo,
-        especialidade,
+        isClinical,
+        especialidadeNome: profile?.specialty_name,
         financiamento,
         cidPrincipal,
         cidSecundario: dadosWizard.cidSecundario,
@@ -281,7 +281,7 @@ export function Relatorios() {
       crfto,
       cidPrincipal: rel.cid_principal,
       financiamento: rel.financiamento,
-      especialidade: profile?.specialty,
+      especialidade: profile?.specialty_name,
       tuss: rel.tuss,
       periodoInicio: rel.periodo_inicio,
       periodoFim: rel.periodo_fim,
@@ -304,7 +304,7 @@ export function Relatorios() {
         crfto,
         cidPrincipal: rel.cid_principal,
         financiamento: rel.financiamento,
-        especialidade: profile?.specialty,
+        especialidade: profile?.specialty_name,
         tuss: rel.tuss,
         periodoInicio: rel.periodo_inicio,
         periodoFim: rel.periodo_fim,
@@ -564,7 +564,7 @@ export function Relatorios() {
         </div>
 
         {passo === 1 && (
-          <WizardStep1 dados={dadosWizard} onChange={setDadosWizard} onProximo={() => setPasso(2)} patients={patients} especialidade={profile?.specialty} />
+          <WizardStep1 dados={dadosWizard} onChange={setDadosWizard} onProximo={() => setPasso(2)} patients={patients} isClinical={profile?.is_clinical} />
         )}
         {passo === 2 && (
           <>
@@ -665,7 +665,7 @@ export function Relatorios() {
           crfto={crfto}
           cidPrincipal={relatorioAtual.cid_principal}
           financiamento={relatorioAtual.financiamento}
-          especialidade={profile?.specialty}
+          especialidade={profile?.specialty_name}
           tuss={relatorioAtual.tuss}
           periodoInicio={relatorioAtual.periodo_inicio}
           periodoFim={relatorioAtual.periodo_fim}
