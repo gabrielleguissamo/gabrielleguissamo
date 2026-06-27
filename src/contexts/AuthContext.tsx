@@ -3,6 +3,7 @@ import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
 import { FREE_REPORT_LIMIT } from '../lib/planLimits'
+import { identifyUser } from '../lib/analytics'
 
 interface AuthContextType {
   user: User | null
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ])
     if (profileRes.data) setProfile(profileRes.data as Profile)
     setHasActiveSubscription(!!subRes.data)
+    identifyUser(userId)
   }
 
   useEffect(() => {
