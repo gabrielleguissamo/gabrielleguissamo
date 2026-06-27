@@ -47,6 +47,8 @@ export interface Profile {
   notif_confirmacoes?: boolean
   notif_relatorio_semanal?: boolean
   notif_atualizacoes?: boolean
+  preferred_name?: string
+  onboarding_completed: boolean
   created_at: string
 }
 
