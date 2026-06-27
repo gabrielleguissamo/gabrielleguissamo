@@ -10,8 +10,8 @@ export interface RelatorioGerado {
   patient_name: string
   patient_id: string
   tipo: 'evolucao' | 'avaliacao' | 'alta' | 'encaminhamento'
-  financiamento: 'convenio' | 'particular'
-  cid_principal: string
+  financiamento?: 'convenio' | 'particular'
+  cid_principal?: string
   cid_secundario?: string
   cif?: string
   tuss?: string
