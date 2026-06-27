@@ -32,10 +32,10 @@ export function OnboardingModal() {
     if (!user) return
     if (!preferredName.trim()) return setError('Diga como você prefere ser chamado.')
     if (!isValidBrazilianPhone(phone)) return setError('Informe um número de WhatsApp válido, com DDD.')
+    if (!isClinical && !specialtyName.trim()) return setError('Digite o nome da sua especialidade.')
 
     setLoading(true)
     setError('')
-    if (!isClinical && !specialtyName.trim()) return setError('Digite o nome da sua especialidade.')
 
     const { error } = await supabase
       .from('profiles')
