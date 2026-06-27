@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import { Lock, Check } from 'lucide-react'
 import { Card } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
 import { useAuth } from '../../contexts/AuthContext'
 import { getStripeCheckoutUrl, getWhatsappCeoUrl } from '../../lib/stripeConfig'
+import { track } from '../../lib/analytics'
 
 const PLANOS = [
   {
@@ -30,8 +32,13 @@ const PLANOS = [
 export function UpgradeModal({ onClose, dismissible = true }: { onClose: () => void; dismissible?: boolean }) {
   const { user, signOut } = useAuth()
 
+  useEffect(() => {
+    track('paywall_viewed')
+  }, [])
+
   function handleUpgrade(plan: 'inicial' | 'profissional') {
     if (!user) return
+    track('upgrade_clicked', { plan })
     window.open(getStripeCheckoutUrl(plan, user.id, user.email), '_blank')
   }
 
