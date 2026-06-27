@@ -6,7 +6,7 @@ import { Input } from '../ui/Input'
 import { Modal } from '../ui/Modal'
 import { formatPhone } from '../../lib/masks'
 import { track } from '../../lib/analytics'
-import { SPECIALTY_OPTIONS, type Specialty } from '../../lib/specialty'
+import { DEFAULT_SPECIALTY_NAME } from '../../lib/specialty'
 
 function isValidBrazilianPhone(value: string): boolean {
   const digits = value.replace(/\D/g, '')
@@ -22,7 +22,8 @@ export function OnboardingModal() {
   const { user, refreshProfile } = useAuth()
   const [preferredName, setPreferredName] = useState('')
   const [phone, setPhone] = useState('')
-  const [specialty, setSpecialty] = useState<Specialty>('terapeuta_ocupacional')
+  const [isClinical, setIsClinical] = useState(true)
+  const [specialtyName, setSpecialtyName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -34,12 +35,15 @@ export function OnboardingModal() {
 
     setLoading(true)
     setError('')
+    if (!isClinical && !specialtyName.trim()) return setError('Digite o nome da sua especialidade.')
+
     const { error } = await supabase
       .from('profiles')
       .update({
         preferred_name: preferredName.trim(),
         phone,
-        specialty,
+        is_clinical: isClinical,
+        specialty_name: isClinical ? DEFAULT_SPECIALTY_NAME : specialtyName.trim(),
         onboarding_completed: true,
       })
       .eq('id', user.id)
@@ -81,18 +85,34 @@ export function OnboardingModal() {
           <div>
             <label className="text-sm font-medium text-ink-2 block mb-2">Qual sua especialidade?</label>
             <div className="space-y-2">
-              {SPECIALTY_OPTIONS.map(opt => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => setSpecialty(opt.key)}
-                  className={`w-full text-left p-3 rounded-xl border-2 transition-all ${specialty === opt.key ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
-                >
-                  <p className="font-medium text-sm text-ink">{opt.label}</p>
-                  <p className="text-xs text-ink-4">{opt.desc}</p>
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setIsClinical(true)}
+                className={`w-full text-left p-3 rounded-xl border-2 transition-all ${isClinical ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+              >
+                <p className="font-medium text-sm text-ink">Terapeuta Ocupacional</p>
+                <p className="text-xs text-ink-4">Relatórios clínicos com CID-10, CIF e normas COFFITO</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsClinical(false)}
+                className={`w-full text-left p-3 rounded-xl border-2 transition-all ${!isClinical ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+              >
+                <p className="font-medium text-sm text-ink">Outra especialidade</p>
+                <p className="text-xs text-ink-4">Terapeuta holístico, hertz, vibracional e outras práticas — sem diagnóstico clínico</p>
+              </button>
             </div>
+            {!isClinical && (
+              <div className="mt-3">
+                <Input
+                  label="Digite sua especialidade"
+                  placeholder="ex: Terapeuta Hertz"
+                  value={specialtyName}
+                  onChange={e => setSpecialtyName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
           </div>
         </div>
 
