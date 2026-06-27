@@ -10,6 +10,7 @@ import { gerarPDF } from '../../lib/generatePDF'
 import { extrairCores, defaultBrandColors } from '../../lib/brandColors'
 import type { BrandColors } from '../../lib/brandColors'
 import { formatarData } from '../../lib/formatDate'
+import { track } from '../../lib/analytics'
 import type { RelatorioGerado, EdicaoRelatorio, Patient } from '../../types'
 import { WizardStep1 } from '../../components/relatorio/WizardStep1'
 import { WizardStep2 } from '../../components/relatorio/WizardStep2'
@@ -182,7 +183,10 @@ export function Relatorios() {
       setEditando(false)
       setRelatorios(prev => [rel, ...prev])
       setTela('resultado')
-      if (isPrimeiroRelatorio) setShowFirstReportCelebration(true)
+      if (isPrimeiroRelatorio) {
+        setShowFirstReportCelebration(true)
+        track('first_report_generated')
+      }
       if (!hasActiveSubscription) await refreshProfile()
     } catch (e) {
       setErro(traduzirErroAPI(e as Error))
