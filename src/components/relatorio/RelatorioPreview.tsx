@@ -13,7 +13,7 @@ interface Props {
   nomePaciente: string
   nomeTerapeuta: string
   crfto: string
-  especialidade?: 'terapeuta_ocupacional' | 'holistico'
+  especialidade?: string
   cidPrincipal?: string
   financiamento?: string
   tuss?: string
@@ -95,7 +95,7 @@ export function RelatorioPreview({
           className="text-center text-base font-bold uppercase tracking-wide mb-1"
           style={{ color: brandColors.primary, fontFamily: 'Fraunces, serif' }}
         >
-          {especialidade === 'holistico' ? 'Relatório de Sessão' : 'Relatório Clínico de Terapia Ocupacional'}
+          {especialidade && especialidade !== 'Terapeuta Ocupacional' ? `Relatório de Sessão — ${especialidade}` : 'Relatório Clínico de Terapia Ocupacional'}
         </h1>
         {tipoRelatorio && (
           <p className="text-center text-xs font-medium text-gray-500 mb-5">
