@@ -145,14 +145,18 @@ interface Props {
   onChange: (d: Dados) => void
   onProximo: () => void
   patients: { id: string; name: string; email?: string }[]
+  especialidade?: 'terapeuta_ocupacional' | 'holistico'
 }
 
-export function WizardStep1({ dados, onChange, onProximo, patients }: Props) {
+export function WizardStep1({ dados, onChange, onProximo, patients, especialidade }: Props) {
   const [buscaPaciente, setBuscaPaciente] = useState(dados.paciente?.name || '')
+  const isHolistico = especialidade === 'holistico'
 
   const d = dados
-  const valido = d.paciente && d.tipo && d.financiamento && d.cidPrincipal &&
-    (d.financiamento === 'particular' || d.tuss)
+  const valido = isHolistico
+    ? d.paciente && d.tipo
+    : d.paciente && d.tipo && d.financiamento && d.cidPrincipal &&
+      (d.financiamento === 'particular' || d.tuss)
 
   const set = (patch: Partial<Dados>) => onChange({ ...d, ...patch })
 
@@ -210,42 +214,48 @@ export function WizardStep1({ dados, onChange, onProximo, patients }: Props) {
       </div>
 
       {/* Financiamento */}
-      <div>
-        <label className="text-sm font-medium text-gray-700 block mb-2">Financiamento <span className="text-red-500">*</span></label>
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => set({ financiamento: 'convenio' })}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${d.financiamento === 'convenio' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
-            <Building2 size={20} className={d.financiamento === 'convenio' ? 'text-green-500' : 'text-gray-400'} />
-            <p className="font-semibold text-gray-800 text-sm mt-2">Convênio</p>
-            <p className="text-xs text-gray-400">Plano de saúde / TISS</p>
-          </button>
-          <button onClick={() => set({ financiamento: 'particular' })}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${d.financiamento === 'particular' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
-            <User size={20} className={d.financiamento === 'particular' ? 'text-green-500' : 'text-gray-400'} />
-            <p className="font-semibold text-gray-800 text-sm mt-2">Particular</p>
-            <p className="text-xs text-gray-400">Atendimento privado</p>
-          </button>
+      {!isHolistico && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-2">Financiamento <span className="text-red-500">*</span></label>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => set({ financiamento: 'convenio' })}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${d.financiamento === 'convenio' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+              <Building2 size={20} className={d.financiamento === 'convenio' ? 'text-green-500' : 'text-gray-400'} />
+              <p className="font-semibold text-gray-800 text-sm mt-2">Convênio</p>
+              <p className="text-xs text-gray-400">Plano de saúde / TISS</p>
+            </button>
+            <button onClick={() => set({ financiamento: 'particular' })}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${d.financiamento === 'particular' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+              <User size={20} className={d.financiamento === 'particular' ? 'text-green-500' : 'text-gray-400'} />
+              <p className="font-semibold text-gray-800 text-sm mt-2">Particular</p>
+              <p className="text-xs text-gray-400">Atendimento privado</p>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CID Principal */}
-      <CidInput label="CID-10 Principal" value={d.cidPrincipal || ''} onChange={v => set({ cidPrincipal: v })} required />
-      <CidInput label="CID-10 Secundário (opcional)" value={d.cidSecundario || ''} onChange={v => set({ cidSecundario: v })} />
+      {!isHolistico && (
+        <>
+          <CidInput label="CID-10 Principal" value={d.cidPrincipal || ''} onChange={v => set({ cidPrincipal: v })} required />
+          <CidInput label="CID-10 Secundário (opcional)" value={d.cidSecundario || ''} onChange={v => set({ cidSecundario: v })} />
 
-      {/* CIF */}
-      <div>
-        <label className="text-sm font-medium text-gray-700 block mb-1">CIF (opcional)</label>
-        <input
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
-          placeholder="ex: b1 Funções mentais, d4 Mobilidade"
-          value={d.cif || ''}
-          onChange={e => set({ cif: e.target.value })}
-        />
-      </div>
+          {/* CIF */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">CIF (opcional)</label>
+            <input
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-500"
+              placeholder="ex: b1 Funções mentais, d4 Mobilidade"
+              value={d.cif || ''}
+              onChange={e => set({ cif: e.target.value })}
+            />
+          </div>
 
-      {/* TUSS */}
-      {d.financiamento === 'convenio' && (
-        <TussInput value={d.tuss || ''} onChange={v => set({ tuss: v })} />
+          {/* TUSS */}
+          {d.financiamento === 'convenio' && (
+            <TussInput value={d.tuss || ''} onChange={v => set({ tuss: v })} />
+          )}
+        </>
       )}
 
       {/* Período */}
