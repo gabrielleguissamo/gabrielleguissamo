@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input'
 
 export function Cadastro() {
   const navigate = useNavigate()
+  const [refCode] = useState(() => new URLSearchParams(window.location.search).get('ref') || '')
   const [form, setForm] = useState({
     fullName: '', email: '', password: '', confirmPassword: '',
     crfTo: '', agreed: false
@@ -28,7 +29,7 @@ export function Cadastro() {
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { full_name: form.fullName, crf_to: form.crfTo } }
+      options: { data: { full_name: form.fullName, crf_to: form.crfTo, referral_code: refCode || undefined } }
     })
     if (error) {
       if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
