@@ -44,6 +44,13 @@ interface PaymentRow {
   created_at: string
 }
 
+interface ReferralRow {
+  id: string
+  referrer_id: string
+  referred_id: string
+  status: 'pending' | 'active' | 'canceled'
+}
+
 function relatoriosGratuitosRestantes(p: Profile) {
   return Math.max(0, FREE_REPORT_LIMIT - (p.free_reports_used ?? 0))
 }
@@ -82,6 +89,7 @@ export function Admin() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [subscriptions, setSubscriptions] = useState<SubscriptionRow[]>([])
   const [payments, setPayments] = useState<PaymentRow[]>([])
+  const [referrals, setReferrals] = useState<ReferralRow[]>([])
   const [loading, setLoading] = useState(true)
   const [grantPlans, setGrantPlans] = useState<Record<string, 'inicial' | 'profissional' | 'business'>>({})
   const [grantingId, setGrantingId] = useState<string | null>(null)
@@ -93,14 +101,16 @@ export function Admin() {
 
   async function fetchData() {
     setLoading(true)
-    const [profilesRes, subsRes, paymentsRes] = await Promise.all([
+    const [profilesRes, subsRes, paymentsRes, referralsRes] = await Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
       supabase.from('subscriptions').select('*'),
       supabase.from('payments').select('*'),
+      supabase.from('referrals').select('*').eq('status', 'active'),
     ])
     if (profilesRes.data) setProfiles(profilesRes.data as Profile[])
     if (subsRes.data) setSubscriptions(subsRes.data as SubscriptionRow[])
     if (paymentsRes.data) setPayments(paymentsRes.data as PaymentRow[])
+    if (referralsRes.data) setReferrals(referralsRes.data as ReferralRow[])
     setLoading(false)
   }
 
@@ -168,6 +178,31 @@ export function Admin() {
   const conversao = profiles.length > 0 ? (ativos.length / profiles.length) * 100 : 0
 
   const mensalidadesPendentesValor = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+
+  // Comissoes de afiliados (modo "comissao") a pagar via PIX
+  const subsByUserActive = new Map(
+    subscriptions.filter(s => s.status === 'active' || s.status === 'trialing').map(s => [s.user_id, s])
+  )
+  const activeReferralsByReferrer = new Map<string, string[]>()
+  for (const r of referrals) {
+    const list = activeReferralsByReferrer.get(r.referrer_id) ?? []
+    list.push(r.referred_id)
+    activeReferralsByReferrer.set(r.referrer_id, list)
+  }
+  const affiliateCommissions = profiles
+    .filter(p => p.referral_mode === 'comissao')
+    .map(p => {
+      const referredIds = activeReferralsByReferrer.get(p.id) ?? []
+      const activeCount = referredIds.length
+      const rate = activeCount <= 50 ? 0.5 : activeCount <= 100 ? 1.0 : 1.5
+      const commission = referredIds.reduce((sum, refId) => {
+        const sub = subsByUserActive.get(refId)
+        return sum + (sub ? Number(sub.amount) * (rate / 100) : 0)
+      }, 0)
+      return { profile: p, activeCount, rate, commission }
+    })
+    .filter(a => a.activeCount > 0)
+    .sort((a, b) => b.commission - a.commission)
 
   // LTV individual por cliente (total já pago)
   const totalPagoPorUsuario = new Map<string, number>()
@@ -323,6 +358,39 @@ export function Admin() {
           ))}
         </div>
       ))}
+
+      {affiliateCommissions.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Comissões de afiliados a pagar (PIX)</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-400 text-xs">
+                  <th className="py-2 pr-4">Afiliado</th>
+                  <th className="py-2 pr-4">Indicados ativos</th>
+                  <th className="py-2 pr-4">Taxa</th>
+                  <th className="py-2 pr-4">Comissão estimada</th>
+                  <th className="py-2 pr-4">Chave PIX</th>
+                </tr>
+              </thead>
+              <tbody>
+                {affiliateCommissions.map(({ profile, activeCount, rate, commission }) => (
+                  <tr key={profile.id} className="border-t border-gray-100">
+                    <td className="py-2 pr-4">
+                      <p className="font-medium text-gray-800">{profile.full_name}</p>
+                      <p className="text-xs text-gray-400">{profile.email}</p>
+                    </td>
+                    <td className="py-2 pr-4">{activeCount}</td>
+                    <td className="py-2 pr-4">{rate}%</td>
+                    <td className="py-2 pr-4 font-semibold text-green-600">{formatBRL(commission)}</td>
+                    <td className="py-2 pr-4 text-gray-500">{profile.pix_key || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-5 md:col-span-2">
