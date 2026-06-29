@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { User, Building2, Bell, CreditCard, Shield, Check, Download, type LucideIcon } from 'lucide-react'
+import { User, Building2, Bell, CreditCard, Shield, Check, Download, Gift, Copy, type LucideIcon } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
@@ -14,7 +14,7 @@ import { getStripeCheckoutUrl, getWhatsappCeoUrl } from '../../lib/stripeConfig'
 import { formatPhone } from '../../lib/masks'
 import { FREE_REPORT_LIMIT } from '../../lib/planLimits'
 
-type Tab = 'perfil' | 'clinica' | 'notificacoes' | 'plano' | 'seguranca'
+type Tab = 'perfil' | 'clinica' | 'notificacoes' | 'plano' | 'indicacoes' | 'seguranca'
 type PlanKey = 'inicial' | 'profissional' | 'business'
 
 const TABS: { key: Tab; label: string; Icon: LucideIcon }[] = [
@@ -22,6 +22,7 @@ const TABS: { key: Tab; label: string; Icon: LucideIcon }[] = [
   { key: 'clinica', label: 'Clínica', Icon: Building2 },
   { key: 'notificacoes', label: 'Notificações', Icon: Bell },
   { key: 'plano', label: 'Plano', Icon: CreditCard },
+  { key: 'indicacoes', label: 'Indique e ganhe', Icon: Gift },
   { key: 'seguranca', label: 'Segurança', Icon: Shield },
 ]
 
@@ -61,6 +62,14 @@ export function Configuracoes() {
   const { user, profile, refreshProfile, signOut, hasActiveSubscription } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>('perfil')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [referralSummary, setReferralSummary] = useState<{
+    active_count: number; pending_count: number; canceled_count: number
+    tier_rate: number; estimated_commission: number
+    referral_code: string; referral_mode: string | null; pix_key: string | null
+  } | null>(null)
+  const [loadingReferral, setLoadingReferral] = useState(false)
+  const [pixKeyInput, setPixKeyInput] = useState('')
+  const [savingReferral, setSavingReferral] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
 
   async function saveToProfile(data: Record<string, unknown>) {
@@ -279,7 +288,51 @@ export function Configuracoes() {
     if (activeTab === 'seguranca') {
       loadMfaFactors()
     }
+    if (activeTab === 'indicacoes') {
+      loadReferralSummary()
+    }
   }, [activeTab])
+
+  async function loadReferralSummary() {
+    setLoadingReferral(true)
+    const { data, error } = await supabase.rpc('get_referral_summary')
+    if (!error && data?.[0]) {
+      setReferralSummary(data[0])
+      setPixKeyInput(data[0].pix_key || '')
+    }
+    setLoadingReferral(false)
+  }
+
+  async function handleSetReferralMode(mode: 'desconto' | 'comissao') {
+    if (!user) return
+    setSavingReferral(true)
+    const { error } = await supabase.from('profiles').update({ referral_mode: mode }).eq('id', user.id)
+    setSavingReferral(false)
+    if (error) {
+      setToast({ message: 'Erro ao salvar preferência', type: 'error' })
+      return
+    }
+    setToast({ message: 'Preferência salva!', type: 'success' })
+    await loadReferralSummary()
+  }
+
+  async function handleSavePixKey() {
+    if (!user) return
+    setSavingReferral(true)
+    const { error } = await supabase.from('profiles').update({ pix_key: pixKeyInput.trim() }).eq('id', user.id)
+    setSavingReferral(false)
+    if (error) {
+      setToast({ message: 'Erro ao salvar chave PIX', type: 'error' })
+      return
+    }
+    setToast({ message: 'Chave PIX salva!', type: 'success' })
+  }
+
+  function handleCopyReferralLink() {
+    if (!referralSummary) return
+    navigator.clipboard.writeText(`https://app.terapo.pro/cadastro?ref=${referralSummary.referral_code}`)
+    setToast({ message: 'Link copiado!', type: 'success' })
+  }
 
   async function loadMfaFactors() {
     setLoadingMfa(true)
@@ -769,6 +822,92 @@ export function Configuracoes() {
               Excluir minha conta
             </Button>
           </Card>
+        </div>
+      )}
+
+      {activeTab === 'indicacoes' && (
+        <div className="max-w-3xl space-y-4">
+          {loadingReferral || !referralSummary ? (
+            <p className="text-sm text-ink-4">Carregando...</p>
+          ) : (
+            <>
+              <Card className="p-6">
+                <h3 className="font-serif text-lg font-semibold text-ink mb-2">Seu link de indicação</h3>
+                <p className="text-sm text-ink-4 mb-4">Compartilhe esse link. Quando alguém indicado virar assinante, a indicação conta.</p>
+                <div className="flex items-center gap-2">
+                  <Input value={`https://app.terapo.pro/cadastro?ref=${referralSummary.referral_code}`} readOnly />
+                  <Button variant="outline" onClick={handleCopyReferralLink} className="text-sm h-9 flex-shrink-0">
+                    <Copy size={14} className="mr-1" /> Copiar
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="font-serif text-lg font-semibold text-ink mb-4">Suas indicações</h3>
+                <div className="grid grid-cols-3 gap-4 mb-2">
+                  <div className="text-center p-3 bg-green-10 rounded-xl">
+                    <p className="text-2xl font-bold text-green-600">{referralSummary.active_count}</p>
+                    <p className="text-xs text-ink-4">Ativas</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 rounded-xl">
+                    <p className="text-2xl font-bold text-amber-600">{referralSummary.pending_count}</p>
+                    <p className="text-xs text-ink-4">Aguardando</p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-bold text-gray-500">{referralSummary.canceled_count}</p>
+                    <p className="text-xs text-ink-4">Canceladas</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="font-serif text-lg font-semibold text-ink mb-2">Como quer ser recompensado?</h3>
+                <p className="text-sm text-ink-4 mb-4">Escolha um modo. Você pode trocar quando quiser.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => handleSetReferralMode('desconto')}
+                    disabled={savingReferral}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${referralSummary.referral_mode === 'desconto' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                  >
+                    <p className="font-semibold text-sm text-ink">Desconto na minha assinatura</p>
+                    <p className="text-xs text-ink-4 mt-1">2% de desconto por indicação ativa, até 20% no máximo.</p>
+                  </button>
+                  <button
+                    onClick={() => handleSetReferralMode('comissao')}
+                    disabled={savingReferral}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${referralSummary.referral_mode === 'comissao' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                  >
+                    <p className="font-semibold text-sm text-ink">Comissão em dinheiro (afiliado)</p>
+                    <p className="text-xs text-ink-4 mt-1">0,5% a 1,5% sobre a mensalidade de cada indicado ativo, pago via PIX.</p>
+                  </button>
+                </div>
+
+                {referralSummary.referral_mode === 'comissao' && (
+                  <div className="border-t border-gray-100 pt-4 space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-green-10 rounded-xl">
+                      <div>
+                        <p className="text-sm text-ink-4">Comissão estimada este mês</p>
+                        <p className="text-lg font-bold text-green-600">
+                          R$ {referralSummary.estimated_commission.toFixed(2)}
+                        </p>
+                      </div>
+                      <p className="text-xs text-ink-4">Taxa atual: {referralSummary.tier_rate}% por indicado ativo</p>
+                    </div>
+                    <Input
+                      label="Sua chave PIX para receber"
+                      value={pixKeyInput}
+                      onChange={e => setPixKeyInput(e.target.value)}
+                      placeholder="CPF, e-mail, telefone ou chave aleatória"
+                    />
+                    <Button onClick={handleSavePixKey} disabled={savingReferral} loading={savingReferral} className="text-sm h-9">
+                      {savingReferral ? '' : 'Salvar chave PIX'}
+                    </Button>
+                    <p className="text-xs text-ink-4">O pagamento da comissão é feito manualmente todo mês, com base no valor calculado aqui.</p>
+                  </div>
+                )}
+              </Card>
+            </>
+          )}
         </div>
       )}
 
