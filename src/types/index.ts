@@ -33,6 +33,9 @@ export interface Profile {
   crf_to?: string
   specialty_name: string
   is_clinical: boolean
+  referral_code?: string
+  referral_mode?: 'desconto' | 'comissao' | null
+  pix_key?: string | null
   bio?: string
   phone?: string
   city?: string
