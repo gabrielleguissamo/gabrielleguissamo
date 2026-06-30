@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
 import { formatarData } from './formatDate'
-import { getSpecialtyLabel } from './specialty'
+import { getSpecialtyLabel, DEFAULT_SPECIALTY_NAME } from './specialty'
 
 interface PDFOptions {
   nomeArquivo: string
@@ -168,7 +168,10 @@ export async function gerarPDF(opts: PDFOptions): Promise<string | void> {
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
   pdf.setTextColor(pr, pg, pb)
-  pdf.text('RELATÓRIO CLÍNICO DE TERAPIA OCUPACIONAL', pageWidth / 2, y, { align: 'center' })
+  const tituloRelatorio = especialidade && especialidade !== DEFAULT_SPECIALTY_NAME
+    ? `RELATÓRIO DE SESSÃO — ${especialidade.toUpperCase()}`
+    : 'RELATÓRIO CLÍNICO DE TERAPIA OCUPACIONAL'
+  pdf.text(tituloRelatorio, pageWidth / 2, y, { align: 'center' })
   y += 5
 
   if (tipoRelatorio && TIPO_SUBTITULO[tipoRelatorio]) {
