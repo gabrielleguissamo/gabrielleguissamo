@@ -24,6 +24,7 @@ export interface RelatorioGerado {
   periodo_fim: string
   validado: boolean
   historico_edicoes: EdicaoRelatorio[]
+  created_at: string
 }
 
 export interface Profile {
