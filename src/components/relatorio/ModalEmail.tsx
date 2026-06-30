@@ -20,6 +20,10 @@ const tiposLabel: Record<string, string> = {
   evolucao: 'Evolução', avaliacao: 'Avaliação', alta: 'Alta', encaminhamento: 'Encaminhamento',
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
 export function ModalEmail({
   nomePaciente, emailPaciente = '', emailTerapeuta = '',
   nomeTerapeuta, crfto, tipoRelatorio, dataGeracao,
@@ -28,6 +32,8 @@ export function ModalEmail({
   const tipo = tiposLabel[tipoRelatorio] || tipoRelatorio
   const [para, setPara] = useState(emailPaciente)
   const [cc, setCc] = useState('')
+  const paraInvalido = para.trim().length > 0 && !isValidEmail(para)
+  const ccInvalido = cc.trim().length > 0 && !isValidEmail(cc)
   const [assunto, setAssunto] = useState(`Relatório de ${tipo} — ${nomePaciente} — ${dataGeracao}`)
   const [mensagem, setMensagem] = useState(
 `Prezado(a) responsável,
@@ -58,18 +64,19 @@ Terapeuta Ocupacional | CRF/TO: ${crfto}`
 
         <div className="space-y-4">
           {[
-            { label: 'Para', value: para, set: setPara, placeholder: 'email@destinatario.com' },
-            { label: 'CC (opcional)', value: cc, set: setCc, placeholder: 'outro@email.com' },
-            { label: 'Assunto', value: assunto, set: setAssunto, placeholder: '' },
-          ].map(({ label, value, set, placeholder }) => (
+            { label: 'Para', value: para, set: setPara, placeholder: 'email@destinatario.com', invalido: paraInvalido },
+            { label: 'CC (opcional)', value: cc, set: setCc, placeholder: 'outro@email.com', invalido: ccInvalido },
+            { label: 'Assunto', value: assunto, set: setAssunto, placeholder: '', invalido: false },
+          ].map(({ label, value, set, placeholder, invalido }) => (
             <div key={label}>
               <label className="text-xs font-semibold text-gray-500 mb-1 block">{label}</label>
               <input
                 value={value}
                 onChange={e => set(e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-11 px-4 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-green-400"
+                className={`w-full h-11 px-4 text-sm border rounded-xl focus:outline-none ${invalido ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-green-400'}`}
               />
+              {invalido && <p className="text-xs text-red-500 mt-1">Digite um e-mail válido.</p>}
             </div>
           ))}
           <div>
@@ -91,7 +98,7 @@ Terapeuta Ocupacional | CRF/TO: ${crfto}`
           <Button
             fullWidth
             onClick={() => onEnviar({ para, cc, assunto, mensagem })}
-            disabled={!para}
+            disabled={!para || paraInvalido || ccInvalido}
             loading={enviando}
           >
             Enviar e-mail
