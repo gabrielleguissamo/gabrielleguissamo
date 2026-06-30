@@ -364,10 +364,8 @@ export function Relatorios() {
 
   const now = new Date()
   const reportsThisMonth = relatorios.filter(r => {
-    const [, month, year] = r.data_geracao.split('/')
-    if (!month || !year) return false
-    const fullYear = year.length === 2 ? 2000 + parseInt(year, 10) : parseInt(year, 10)
-    return parseInt(month, 10) - 1 === now.getMonth() && fullYear === now.getFullYear()
+    const createdAt = new Date(r.created_at)
+    return createdAt.getMonth() === now.getMonth() && createdAt.getFullYear() === now.getFullYear()
   })
 
   // Quem ainda não assinou usa os 5 relatórios gratuitos vitalícios em vez do limite mensal do plano.
