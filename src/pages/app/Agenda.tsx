@@ -268,7 +268,7 @@ export function Agenda() {
             await supabase.from('sessions').update({ google_event_id: null }).eq('id', session.id)
             setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: null } : s))
           } catch {
-            // Silently ignore Google sync errors
+            setToast({ message: 'Sessão cancelada, mas houve erro ao remover o evento da Google Agenda', type: 'error' })
           }
         }
       } else if (newStatus === 'pendente') {
@@ -287,7 +287,7 @@ export function Agenda() {
             await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', session.id)
             setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: googleEventId } : s))
           } catch {
-            // Silently ignore Google sync errors
+            setToast({ message: 'Sessão reaberta, mas houve erro ao recriar o evento na Google Agenda', type: 'error' })
           }
         }
       }
