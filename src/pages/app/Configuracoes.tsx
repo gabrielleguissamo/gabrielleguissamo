@@ -449,6 +449,10 @@ export function Configuracoes() {
   }
 
   async function handleChangePassword() {
+    if (!currentPassword) {
+      setToast({ message: 'Digite sua senha atual', type: 'error' })
+      return
+    }
     if (!newPassword || newPassword !== confirmPassword) {
       setToast({ message: 'As senhas não coincidem', type: 'error' })
       return
@@ -458,6 +462,20 @@ export function Configuracoes() {
       return
     }
     setSavingPassword(true)
+    if (!user?.email) {
+      setSavingPassword(false)
+      setToast({ message: 'Erro ao alterar senha', type: 'error' })
+      return
+    }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+    if (signInError) {
+      setSavingPassword(false)
+      setToast({ message: 'Senha atual incorreta', type: 'error' })
+      return
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     setSavingPassword(false)
     if (error) {
