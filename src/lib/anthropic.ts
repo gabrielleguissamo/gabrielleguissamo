@@ -156,8 +156,10 @@ export async function gerarResumoFamiliar(params: {
   nomePaciente: string
   nomeTerapeuta: string
   tipoRelatorio: string
+  especialidade?: string
 }): Promise<string> {
-  const system = `Você é terapeuta ocupacional que explica situações clínicas de forma simples, acolhedora e clara para famílias e responsáveis.`
+  const especialidadeLabel = params.especialidade?.trim() || 'Terapeuta Ocupacional'
+  const system = `Você é ${especialidadeLabel} que explica situações de atendimento de forma simples, acolhedora e clara para famílias e responsáveis.`
 
   const user = `Com base no relatório técnico abaixo, crie um RESUMO PARA FAMÍLIA de ${params.nomePaciente} — relatório de ${params.tipoRelatorio}.
 
@@ -178,7 +180,7 @@ ESTRUTURA (linguagem simples, sem jargões, ~600 palavras):
 
 ## Próximos passos
 
-Assine: ${params.nomeTerapeuta} — Terapeuta Ocupacional
+Assine: ${params.nomeTerapeuta} — ${especialidadeLabel}
 Comece direto pelo conteúdo.`
 
   return callAI(system, user, 1500)
