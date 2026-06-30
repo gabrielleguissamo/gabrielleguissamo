@@ -163,8 +163,9 @@ export function Agenda() {
             type: form.type,
           })
           await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', row.id)
-        } catch {
+        } catch (e) {
           syncErrors++
+          if (e instanceof Error && e.message === 'not_connected') setGoogleConnected(false)
         }
       }
     }
@@ -267,8 +268,13 @@ export function Agenda() {
             await deleteGoogleCalendarEvent(session.google_event_id)
             await supabase.from('sessions').update({ google_event_id: null }).eq('id', session.id)
             setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: null } : s))
-          } catch {
-            setToast({ message: 'Sessão cancelada, mas houve erro ao remover o evento da Google Agenda', type: 'error' })
+          } catch (e) {
+            if (e instanceof Error && e.message === 'not_connected') {
+              setGoogleConnected(false)
+              setToast({ message: 'Sessão cancelada. Sua conexão com a Google Agenda expirou, reconecte em Configurações.', type: 'error' })
+            } else {
+              setToast({ message: 'Sessão cancelada, mas houve erro ao remover o evento da Google Agenda', type: 'error' })
+            }
           }
         }
       } else if (newStatus === 'pendente') {
@@ -286,8 +292,13 @@ export function Agenda() {
             })
             await supabase.from('sessions').update({ google_event_id: googleEventId }).eq('id', session.id)
             setSessions(prev => prev.map(s => s.id === session.id ? { ...s, google_event_id: googleEventId } : s))
-          } catch {
-            setToast({ message: 'Sessão reaberta, mas houve erro ao recriar o evento na Google Agenda', type: 'error' })
+          } catch (e) {
+            if (e instanceof Error && e.message === 'not_connected') {
+              setGoogleConnected(false)
+              setToast({ message: 'Sessão reaberta. Sua conexão com a Google Agenda expirou, reconecte em Configurações.', type: 'error' })
+            } else {
+              setToast({ message: 'Sessão reaberta, mas houve erro ao recriar o evento na Google Agenda', type: 'error' })
+            }
           }
         }
       }
