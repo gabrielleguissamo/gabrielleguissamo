@@ -299,6 +299,8 @@ export function Configuracoes() {
     if (!error && data?.[0]) {
       setReferralSummary(data[0])
       setPixKeyInput(data[0].pix_key || '')
+    } else {
+      setToast({ message: 'Erro ao carregar dados de indicação. Tente novamente.', type: 'error' })
     }
     setLoadingReferral(false)
   }
@@ -325,6 +327,7 @@ export function Configuracoes() {
       setToast({ message: 'Erro ao salvar chave PIX', type: 'error' })
       return
     }
+    setReferralSummary(prev => prev ? { ...prev, pix_key: pixKeyInput.trim() } : prev)
     setToast({ message: 'Chave PIX salva!', type: 'success' })
   }
 
