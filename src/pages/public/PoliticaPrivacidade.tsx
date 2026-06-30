@@ -58,7 +58,26 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">5. Armazenamento e segurança</h2>
+            <h2 className="font-semibold text-ink mb-1">5. Integração com o Google Agenda</h2>
+            <p>
+              Se você optar por conectar sua conta do Google ao Terapô.pro, solicitamos acesso ao escopo{' '}
+              <code>https://www.googleapis.com/auth/calendar.events</code> para criar, atualizar e excluir
+              eventos na sua Agenda do Google, exclusivamente para sincronizar as sessões agendadas na
+              plataforma com o seu calendário pessoal. Não lemos, armazenamos nem compartilhamos nenhum
+              outro dado da sua conta Google além do necessário para essa sincronização, e essas
+              informações nunca são usadas para fins de publicidade. O uso de dados do Google pelo
+              Terapô.pro está em conformidade com a Política de Dados do Usuário dos Serviços de API do
+              Google, incluindo os requisitos de Uso Limitado (Limited Use). Você pode revogar esse acesso
+              a qualquer momento em Configurações &gt; Notificações, dentro do app, ou diretamente na sua
+              conta Google em{' '}
+              <a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer" className="text-green-600 underline">
+                myaccount.google.com/permissions
+              </a>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-semibold text-ink mb-1">6. Armazenamento e segurança</h2>
             <p>
               Os dados são armazenados em servidores com criptografia em trânsito e em repouso, com controle
               de acesso restrito por autenticação e políticas de segurança em nível de linha (RLS), garantindo
@@ -67,7 +86,7 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">6. Seus direitos</h2>
+            <h2 className="font-semibold text-ink mb-1">7. Seus direitos</h2>
             <p>Você pode, a qualquer momento, solicitar:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Confirmação da existência de tratamento e acesso aos seus dados;</li>
@@ -83,7 +102,7 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">7. Retenção dos dados</h2>
+            <h2 className="font-semibold text-ink mb-1">8. Retenção dos dados</h2>
             <p>
               Os dados são mantidos enquanto a conta estiver ativa. Ao solicitar a exclusão da conta, os
               dados pessoais são removidos em até 30 dias, exceto quando a manutenção for exigida por
@@ -92,7 +111,7 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">8. Responsabilidade do profissional</h2>
+            <h2 className="font-semibold text-ink mb-1">9. Responsabilidade do profissional</h2>
             <p>
               Como controlador dos dados de seus pacientes, é responsabilidade do profissional obter o
               consentimento adequado dos pacientes (ou responsáveis legais) para o registro de informações
@@ -101,7 +120,7 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">9. Alterações desta política</h2>
+            <h2 className="font-semibold text-ink mb-1">10. Alterações desta política</h2>
             <p>
               Esta política pode ser atualizada periodicamente. Notificaremos sobre alterações relevantes
               por e-mail ou através da plataforma.
@@ -109,7 +128,7 @@ export function PoliticaPrivacidade() {
           </section>
 
           <section>
-            <h2 className="font-semibold text-ink mb-1">10. Contato</h2>
+            <h2 className="font-semibold text-ink mb-1">11. Contato</h2>
             <p>
               Em caso de dúvidas sobre o tratamento de dados, contate-nos em{' '}
               <a href="mailto:contato@terapo.pro" className="text-green-600 underline">contato@terapo.pro</a>.
