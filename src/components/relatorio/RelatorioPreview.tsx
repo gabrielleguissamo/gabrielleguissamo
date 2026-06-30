@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import type { BrandColors } from '../../lib/brandColors'
 import { defaultBrandColors } from '../../lib/brandColors'
 import { formatarData } from '../../lib/formatDate'
-import { getSpecialtyLabel } from '../../lib/specialty'
+import { getSpecialtyLabel, DEFAULT_SPECIALTY_NAME } from '../../lib/specialty'
 
 interface Props {
   id?: string
@@ -95,7 +95,7 @@ export function RelatorioPreview({
           className="text-center text-base font-bold uppercase tracking-wide mb-1"
           style={{ color: brandColors.primary, fontFamily: 'Fraunces, serif' }}
         >
-          {especialidade && especialidade !== 'Terapeuta Ocupacional' ? `Relatório de Sessão — ${especialidade}` : 'Relatório Clínico de Terapia Ocupacional'}
+          {especialidade && especialidade !== DEFAULT_SPECIALTY_NAME ? `Relatório de Sessão — ${especialidade}` : 'Relatório Clínico de Terapia Ocupacional'}
         </h1>
         {tipoRelatorio && (
           <p className="text-center text-xs font-medium text-gray-500 mb-5">
