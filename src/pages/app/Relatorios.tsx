@@ -208,6 +208,7 @@ export function Relatorios() {
         tipoRelatorio: relatorioAtual.tipo,
         relatorioTecnico: conteudoEditado,
         nomeTerapeuta,
+        especialidade: profile?.specialty_name,
       })
       setResumoFamiliar(resumo)
       setMostrarResumo(true)
