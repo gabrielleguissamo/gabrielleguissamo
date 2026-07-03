@@ -315,14 +315,20 @@ export function Agenda() {
     return `${startStr} a ${endStr}`
   }
 
-  function getSessionForCell(dayIndex: number, hour: string): SessionWithPatient | undefined {
+  function getSessionsForCell(dayIndex: number, hour: string): SessionWithPatient[] {
     const dateStr = toISO(weekDates[dayIndex])
-    return sessions.find(s => s.date === dateStr && s.time.padStart(5, '0').slice(0, 5) === hour)
+    const hourNum = parseInt(hour.slice(0, 2), 10)
+    return sessions.filter(s => {
+      if (s.date !== dateStr) return false
+      return parseInt(s.time.slice(0, 2), 10) === hourNum
+    })
   }
+
+  const todayStr = toISO(new Date())
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1">
           {(['dia', 'semana', 'mes'] as const).map(v => (
             <button
@@ -337,7 +343,7 @@ export function Agenda() {
         <div className="flex items-center gap-2">
           {googleConnected ? (
             <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
-              Google Agenda conectado ✓
+              Google Agenda ✓
             </span>
           ) : (
             <Button variant="outline" onClick={handleConnectGoogle}>
@@ -351,12 +357,12 @@ export function Agenda() {
       </div>
 
       <Card className="overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
-          <button className="p-1 text-ink-4 hover:text-ink" onClick={() => setWeekStart(w => addDays(w, -7))}>
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <button className="p-1.5 text-ink-4 hover:text-ink hover:bg-gray-100 rounded-lg transition-colors" onClick={() => setWeekStart(w => addDays(w, -7))}>
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="font-medium text-ink">{formatWeekLabel()}</span>
-          <button className="p-1 text-ink-4 hover:text-ink" onClick={() => setWeekStart(w => addDays(w, 7))}>
+          <span className="font-serif font-semibold text-ink">{formatWeekLabel()}</span>
+          <button className="p-1.5 text-ink-4 hover:text-ink hover:bg-gray-100 rounded-lg transition-colors" onClick={() => setWeekStart(w => addDays(w, 7))}>
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -365,32 +371,51 @@ export function Agenda() {
             <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="overflow-auto">
-            <div className="grid" style={{ gridTemplateColumns: '60px repeat(7, 1fr)', minWidth: '700px' }}>
-              <div className="border-b border-r h-10" />
-              {DAYS.map((d, i) => (
-                <div key={d} className="border-b border-r h-10 flex flex-col items-center justify-center text-sm font-medium text-ink-3">
-                  <span>{d}</span>
-                  <span className="text-xs text-ink-5">{weekDates[i].getDate()}</span>
-                </div>
-              ))}
+          <div className="overflow-auto max-h-[calc(100vh-260px)]">
+            <div className="grid" style={{ gridTemplateColumns: '56px repeat(7, 1fr)', minWidth: '680px' }}>
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-white border-b border-r h-12" />
+              {DAYS.map((d, i) => {
+                const isToday = toISO(weekDates[i]) === todayStr
+                return (
+                  <div key={d} className={`sticky top-0 z-10 border-b border-r h-12 flex flex-col items-center justify-center text-sm ${isToday ? 'bg-green-50' : 'bg-white'}`}>
+                    <span className={`font-medium ${isToday ? 'text-green-700' : 'text-ink-3'}`}>{d}</span>
+                    <span className={`text-xs font-bold ${isToday ? 'bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center' : 'text-ink-5'}`}>
+                      {weekDates[i].getDate()}
+                    </span>
+                  </div>
+                )
+              })}
+              {/* Hour rows */}
               {HOURS.map(hour => (
                 <React.Fragment key={hour}>
-                  <div className="border-b border-r px-2 py-1 text-xs text-ink-5">{hour}</div>
+                  <div className="border-b border-r px-2 pt-1.5 text-xs text-ink-5 h-16">{hour}</div>
                   {DAYS.map((_, dayIdx) => {
-                    const session = getSessionForCell(dayIdx, hour)
+                    const cellSessions = getSessionsForCell(dayIdx, hour)
+                    const isToday = toISO(weekDates[dayIdx]) === todayStr
                     return (
-                      <div key={dayIdx} className="border-b border-r h-12 p-1 relative">
-                        {session && (
+                      <div
+                        key={dayIdx}
+                        className={`border-b border-r h-16 p-0.5 ${isToday ? 'bg-green-50/30' : ''}`}
+                        onClick={() => {
+                          if (cellSessions.length === 0) {
+                            setForm(f => ({ ...f, date: toISO(weekDates[dayIdx]), time: hour }))
+                            setShowModal(true)
+                          }
+                        }}
+                      >
+                        {cellSessions.map(session => (
                           <button
-                            className={`w-full text-xs rounded px-1 py-0.5 truncate text-left ${statusColors[session.status]} ${updatingIds.has(session.id) ? 'opacity-50 cursor-wait' : ''}`}
-                            onClick={() => toggleStatus(session)}
+                            key={session.id}
+                            className={`w-full text-xs rounded-md px-1.5 py-1 text-left mb-0.5 ${statusColors[session.status]} ${updatingIds.has(session.id) ? 'opacity-50 cursor-wait' : 'hover:opacity-90'} transition-opacity`}
+                            onClick={e => { e.stopPropagation(); toggleStatus(session) }}
                             disabled={updatingIds.has(session.id)}
-                            title="Clique para mudar status"
+                            title={`${session.patients?.name ?? 'Paciente'} — ${session.time.slice(0, 5)} · Clique para mudar status`}
                           >
-                            {session.patients?.name ?? 'Paciente'}
+                            <div className="font-semibold truncate">{session.patients?.name ?? 'Paciente'}</div>
+                            <div className="opacity-70">{session.time.slice(0, 5)} · {session.duration}min</div>
                           </button>
-                        )}
+                        ))}
                       </div>
                     )
                   })}
