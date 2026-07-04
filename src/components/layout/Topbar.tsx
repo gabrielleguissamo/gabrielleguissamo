@@ -80,6 +80,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     }
 
     fetchNotifications()
+
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') fetchNotifications()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [user])
 
   useEffect(() => {

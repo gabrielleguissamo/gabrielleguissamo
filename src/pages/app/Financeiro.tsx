@@ -100,7 +100,11 @@ export function Financeiro() {
   useEffect(() => { fetchConfirmedSessions() }, [user, selectedMonth])
 
   async function handleSave() {
-    if (!user || !form.date || !form.amount || parseFloat(form.amount) <= 0) return
+    if (!user || !form.date || !form.amount) return
+    if (parseFloat(form.amount) <= 0) {
+      setToast({ message: 'Informe um valor maior que zero.', type: 'error' })
+      return
+    }
     setSaving(true)
 
     const n = form.type === 'mensalidade' ? Math.min(Math.max(parseInt(form.mensesRepetir) || 1, 1), 24) : 1

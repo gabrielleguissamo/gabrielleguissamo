@@ -155,6 +155,7 @@ export function Configuracoes() {
     if (status === 'success') {
       setToast({ message: 'Google Agenda conectado!', type: 'success' })
       setActiveTab('notificacoes')
+      if (user) isGoogleCalendarConnected(user.id).then(setGoogleConnected)
     } else if (status === 'error') {
       setToast({ message: 'Erro ao conectar Google Agenda', type: 'error' })
       setActiveTab('notificacoes')
@@ -162,7 +163,7 @@ export function Configuracoes() {
     if (status) {
       window.history.replaceState({}, '', window.location.pathname)
     }
-  }, [])
+  }, [user])
 
   function handleConnectGoogle() {
     const redirectUri = `${window.location.origin}/auth/google-calendar-callback`
