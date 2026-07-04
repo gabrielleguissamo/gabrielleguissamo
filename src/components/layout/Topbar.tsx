@@ -68,12 +68,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       const items: NotificationItem[] = (data ?? []).map((session) => {
         const patientName = (session.patients as unknown as { name: string } | null)?.name ?? 'Paciente'
         if (session.date === todayKey && session.status === 'pendente') {
-          return { id: session.id, message: `Confirme a sessão de hoje com ${patientName} às ${session.time}` }
+          return { id: session.id, message: `Confirme a sessão de hoje com ${patientName} às ${session.time.slice(0, 5)}` }
         }
         if (session.date === todayKey) {
-          return { id: session.id, message: `Sessão com ${patientName} hoje às ${session.time}` }
+          return { id: session.id, message: `Sessão com ${patientName} hoje às ${session.time.slice(0, 5)}` }
         }
-        return { id: session.id, message: `Lembrete: sessão com ${patientName} amanhã às ${session.time}` }
+        return { id: session.id, message: `Lembrete: sessão com ${patientName} amanhã às ${session.time.slice(0, 5)}` }
       })
 
       setNotifications(items)

@@ -35,7 +35,7 @@ export function Pacientes() {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showLimitModal, setShowLimitModal] = useState(() => sessionStorage.getItem('limitModalDismissed') !== 'true')
+  const [showLimitModal, setShowLimitModal] = useState(() => sessionStorage.getItem(`limitModalDismissed_${user?.id}`) !== 'true')
   const [visibleCount, setVisibleCount] = useState(30)
 
   // Form state
@@ -127,26 +127,15 @@ export function Pacientes() {
       }
       setToast({ message: 'Paciente atualizado com sucesso!', type: 'success' })
     } else {
-      const { data: inserted, error } = await supabase.from('patients').insert({
+      const { error } = await supabase.from('patients').insert({
         user_id: user.id,
         ...payload,
-      }).select('id').single()
+      })
 
       if (error) {
         setSaving(false)
         setToast({ message: 'Erro ao salvar paciente', type: 'error' })
         return
-      }
-
-      if (sessionValue && sessionValue > 0 && inserted) {
-        await supabase.from('transactions').insert({
-          user_id: user.id,
-          patient_id: inserted.id,
-          date: new Date().toISOString().slice(0, 10),
-          amount: sessionValue,
-          type: 'sessao',
-          status: 'pendente',
-        })
       }
 
       setSaving(false)
@@ -339,7 +328,7 @@ export function Pacientes() {
       </AnimatePresence>
 
       {nearLimit && showLimitModal && (
-        <Modal labelledBy="limit-modal-title" onClose={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }} maxWidth="max-w-sm">
+        <Modal labelledBy="limit-modal-title" onClose={() => { sessionStorage.setItem(`limitModalDismissed_${user?.id}`, 'true'); setShowLimitModal(false) }} maxWidth="max-w-sm">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0">
                 <Lock className="w-5 h-5" />
@@ -351,7 +340,7 @@ export function Pacientes() {
               Faça upgrade para um plano com mais espaço e continue cadastrando pacientes sem interrupções.
             </p>
             <div className="flex gap-3">
-              <Button variant="outline" fullWidth onClick={() => { sessionStorage.setItem('limitModalDismissed', 'true'); setShowLimitModal(false) }}>Continuar</Button>
+              <Button variant="outline" fullWidth onClick={() => { sessionStorage.setItem(`limitModalDismissed_${user?.id}`, 'true'); setShowLimitModal(false) }}>Continuar</Button>
               <Button fullWidth onClick={() => { window.location.href = '/configuracoes' }}>Fazer upgrade</Button>
             </div>
         </Modal>

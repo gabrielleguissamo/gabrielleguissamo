@@ -77,6 +77,7 @@ export function Dashboard() {
 
   useEffect(() => {
     if (!user) return
+    let cancelled = false
 
     async function loadDashboard() {
       setLoading(true)
@@ -91,6 +92,7 @@ export function Dashboard() {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user!.id)
         .eq('status', 'ativo')
+      if (cancelled) return
       setActivePatients(patCount ?? 0)
 
       // This week sessions
@@ -197,13 +199,14 @@ export function Dashboard() {
       lista.sort((a, b) => a.data.getTime() - b.data.getTime())
       setAniversariantes(lista)
       } catch (err) {
-        console.error('Erro ao carregar dashboard:', err)
+        if (!cancelled) console.error('Erro ao carregar dashboard:', err)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
     loadDashboard()
+    return () => { cancelled = true }
   }, [user])
 
   const metrics = [

@@ -85,12 +85,14 @@ export function Avisos() {
       }
       return
     }
+    const amount = session.value ?? 0
+    if (amount <= 0) return
     await supabase.from('transactions').insert({
       user_id: user.id,
       patient_id: session.patient_id,
       session_id: session.id,
       date: session.date,
-      amount: session.value ?? 0,
+      amount,
       type: 'sessao',
       status: 'pendente',
     })

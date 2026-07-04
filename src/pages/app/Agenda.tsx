@@ -493,7 +493,7 @@ export function Agenda() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-ink-4 block mb-1">Repetir por (semanas)</label>
+                      <label className="text-xs font-medium text-ink-4 block mb-1">Número de sessões</label>
                       <input
                         type="number"
                         min={1}
